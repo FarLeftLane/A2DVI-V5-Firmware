@@ -1,0 +1,11 @@
+*.gch
+*.pyc
+*.lst
+*.bin
+_BUILD/PICO
+_BUILD/PICO2
+_BUILD/ZIP
+_BUILD/localsettings.mk
+_BUILD/*.zip
+_BUILD/*.uf2
+firmware/fonts/raw

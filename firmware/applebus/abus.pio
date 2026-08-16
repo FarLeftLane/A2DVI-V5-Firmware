@@ -1,0 +1,75 @@
+; MIT License
+;
+; Copyright (c) 2021 Mark Aikens
+; Copyright (c) 2024 Thorsten Brehm
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
+.define public PHI0_GPIO 26
+
+; SET bits for transceiver control:
+;                    0bxxx
+;                      x..  - select AddrHi, active low
+;                      .x.  - select AddrLo, active low
+;                      ..x  - select Data, active low
+.define CTRL_ADDRHI  0b011
+.define CTRL_ADDRLO  0b101
+.define CTRL_DATAIN  0b110
+.define CTRL_NONE    0b111
+
+; Apple II bus interface
+; Ref: Understanding the Apple II, pages 4-7, 7-8
+
+.program abus
+; Prerequisites:
+;  * Bus clock used is PHI0
+;  * JMP pin is mapped to the R/W signal
+;  * IN pins are mapped to Data[7:0], ~SELECT, R/W
+;  * SET pins are mapped to the transceiver enable signals
+;  * input shift left & autopush @ 26 bits
+;  * run at about 250MHz (4ns/instruction)
+;
+.wrap_target
+next_bus_cycle:
+    set PINS, CTRL_ADDRHI               ; enable AddrHi transceiver
+    wait 1 GPIO, PHI0_GPIO              ; wait for PHI0 to rise. Data propagation through the transceiver should
+                                        ; be complete by the time this happens.
+
+    ; the current time is P0+42ns (P0 + 18ns (buffer + clock input delays) + 2 clocks (input synchronizers) + 1 instruction)
+
+    in PINS, 8                          ; read AddrHi[7:0]
+    set PINS, CTRL_ADDRLO    [10]       ; enable AddrLo transceiver and delay for transceiver propagation delay
+    in PINS, 8                          ; read AddrLo[7:0]
+
+    jmp PIN, read_cycle                 ; jump based on the state of the R/W pin
+
+write_cycle:
+    ; the current time is P0+114ns (P0 + 18ns (buffer + clock input delays) + 2 clocks (input synchronizers) + 10 instructions)
+
+    set PINS, CTRL_DATAIN    [30]       ; enable Data transceiver & wait until both ~SELECT and the written data are valid (P0+200ns)
+    in PINS, 10                         ; read Data[7:0], ~SELECT and R/W then autopush
+    wait 0 GPIO, PHI0_GPIO   [7]        ; wait for PHI0 to fall
+    jmp next_bus_cycle
+
+read_cycle:
+    ; the current time is P0+114ns (P0 + 18ns (buffer + clock input delays) + 2 clocks (input synchronizers) + 10 instructions)
+
+    in PINS, 10                         ; read dontcare[7:0], ~SELECT and R/W and then autopush
+    wait 0 GPIO, PHI0_GPIO   [7]        ; wait for PHI0 to fall
+.wrap
