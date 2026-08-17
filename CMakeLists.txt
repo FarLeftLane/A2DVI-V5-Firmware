@@ -154,3 +154,6 @@ pico_generate_pio_header(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/dvi_
 pico_generate_pio_header(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/tmds_encode_1bpp.pio)
 
 pico_add_extra_outputs(A2DVI)
+
+# use platform-specific linker script
+pico_set_linker_script(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/firmware/scripts/copy_to_ram_custom_rp2350.ld)
