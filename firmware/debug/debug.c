@@ -100,7 +100,9 @@ bool __no_inline_not_in_flash_func(get_bootsel_button)(void)
 #ifdef FEATURE_TEST
 static void debug_flashmode()
 {
+#ifdef LED_PIN
     gpio_put(LED_PIN, 0);
+#endif
     reset_usb_boot(0,0);
 }
 #endif
@@ -108,20 +110,28 @@ static void debug_flashmode()
 void debug_init()
 {
     // LED
+#ifdef LED_PIN
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
     gpio_put(LED_PIN, 1);
+#endif
 }
 
 void debug_blink(uint8_t count, uint32_t delay0, uint32_t delay1, uint32_t delay2)
 {
+#ifdef LED_PIN
     gpio_put(LED_PIN, 0);
+#endif
     sleep_ms(delay0);
     for (int i=0;i<count;i++)
     {
+#ifdef LED_PIN
         gpio_put(LED_PIN, 1);
+#endif
         sleep_ms(delay1);
+#ifdef LED_PIN
         gpio_put(LED_PIN, 0);
+#endif
         sleep_ms(delay2);
     }
 }
@@ -140,14 +150,20 @@ void debug_sos(void)
 #ifdef FEATURE_TEST
 void debug_error(uint32_t error_code)
 {
+#ifdef LED_PIN
     gpio_put(LED_PIN, 0);
+#endif
     sleep_ms(2000);
 
     for (int i=0;i<error_code;i++)
     {
+#ifdef LED_PIN
         gpio_put(LED_PIN, 1);
+#endif
         sleep_ms(500);
+#ifdef LED_PIN
         gpio_put(LED_PIN, 0);
+#endif
         sleep_ms(500);
     }
 

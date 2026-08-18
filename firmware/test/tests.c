@@ -126,14 +126,16 @@ void sleep(int Milliseconds)
 {
     while (Milliseconds--)
     {
-#if 1
+#ifdef PICO_DEFAULT_LED_PIN
         if (0 == Milliseconds % 100)
             gpio_xor_mask(1u << PICO_DEFAULT_LED_PIN);
 #endif
         debug_check_bootsel();
         sleep_ms(1);
     }
+#ifdef PICO_DEFAULT_LED_PIN
     gpio_put(PICO_DEFAULT_LED_PIN, 1);
+#endif
 }
 
 void togglePages()

@@ -93,7 +93,9 @@ static inline void update_led()
 {
     if (bus_cycle_counter != led_bus_cycle_counter) // 6502 is also alive
     {
+#ifdef PICO_DEFAULT_LED_PIN
         gpio_xor_mask(1u << PICO_DEFAULT_LED_PIN);
+#endif
         led_bus_cycle_counter = bus_cycle_counter;
     }
 }

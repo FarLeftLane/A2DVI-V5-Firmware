@@ -23,7 +23,10 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico2 CACHE STRING "Board type")
+# We have a custom board header for PV
+set(PICO_BOARD A2DVI_V5)
+# Add the directory containing the custom board header to the search path
+set(PICO_BOARD_HEADER_DIRS "${CMAKE_CURRENT_LIST_DIR}/firmware/boards")
 
 # firmware version
 set(FW_VERSION "5.0a")
@@ -155,5 +158,6 @@ pico_generate_pio_header(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/tmds
 
 pico_add_extra_outputs(A2DVI)
 
-# use platform-specific linker script
+# use platform-specific linker script and run from RAM
+pico_set_binary_type(A2DVI copy_to_ram)
 pico_set_linker_script(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/firmware/scripts/copy_to_ram_custom_rp2350.ld)

@@ -24,7 +24,9 @@ SOFTWARE.
 
 #pragma once
 
+#ifdef PICO_DEFAULT_LED_PIN
 #define LED_PIN     PICO_DEFAULT_LED_PIN
+#endif
 
 #ifdef FEATURE_TEST
     extern volatile bool debug_flash_released;
