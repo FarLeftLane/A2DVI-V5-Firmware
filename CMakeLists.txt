@@ -28,14 +28,14 @@ set(PICO_BOARD A2DVI_V5)
 # Add the directory containing the custom board header to the search path
 set(PICO_BOARD_HEADER_DIRS "${CMAKE_CURRENT_LIST_DIR}/firmware/boards")
 
+
+# Pull in Raspberry Pi Pico SDK (must be before project)
+
+include(pico_sdk_import.cmake)
 # firmware version
 set(FW_VERSION "5.0a")
 message(STATUS "Building firmware version ${FW_VERSION}")
-
-# Pull in Raspberry Pi Pico SDK (must be before project)
-include(pico_sdk_import.cmake)
-
-project(A2DVI C CXX ASM)
+project(A2DVI-V5-v5.0a C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
@@ -50,7 +50,7 @@ add_compile_options(-DFW_VERSION="${FW_VERSION}")
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(A2DVI 
+add_executable(${PROJECT_NAME} 
     firmware/main.c
     firmware/applebus/abus.c
     firmware/applebus/abus_setup.c
@@ -119,21 +119,21 @@ add_executable(A2DVI
     libraries/libdvi/tmds_encode.c
  )
 
-pico_set_program_name(A2DVI "A2DVI")
-pico_set_program_version(A2DVI "0.1")
+pico_set_program_name(${PROJECT_NAME} "A2DVI")
+pico_set_program_version(${PROJECT_NAME} "5.0a")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(A2DVI 0)
-pico_enable_stdio_usb(A2DVI 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
 
 # Add the standard library to the build
-target_link_libraries(A2DVI
+target_link_libraries(${PROJECT_NAME}
     pico_base_headers
     pico_runtime_init
     pico_runtime
     pico_multicore
     pico_util
-    
+
     hardware_flash
     hardware_vreg
     hardware_clocks
@@ -146,20 +146,20 @@ target_link_libraries(A2DVI
 )
 
 # Add the standard include files to the build
-target_include_directories(A2DVI PRIVATE
+target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/firmware
 )
 
-target_include_directories(A2DVI PRIVATE libraries/libdvi)
+target_include_directories(${PROJECT_NAME} PRIVATE libraries/libdvi)
 
 # PIO code
-pico_generate_pio_header(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/firmware/applebus/abus.pio)
-pico_generate_pio_header(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/dvi_serialiser.pio)
-pico_generate_pio_header(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/tmds_encode_1bpp.pio)
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/firmware/applebus/abus.pio)
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/dvi_serialiser.pio)
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/libraries/libdvi/tmds_encode_1bpp.pio)
 
-pico_add_extra_outputs(A2DVI)
+pico_add_extra_outputs(${PROJECT_NAME})
 
 # use platform-specific linker script and run from RAM
-pico_set_binary_type(A2DVI copy_to_ram)
-pico_set_linker_script(A2DVI ${CMAKE_CURRENT_SOURCE_DIR}/firmware/scripts/copy_to_ram_custom_rp2350.ld)
+pico_set_binary_type(${PROJECT_NAME} copy_to_ram)
+pico_set_linker_script(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/firmware/scripts/copy_to_ram_custom_rp2350.ld)
