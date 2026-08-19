@@ -36,8 +36,7 @@ MEMORY
     FLASH_CONFIG(r)   : ORIGIN = 0x10000000 + (4096k - __FLASH_CONFIG_LEN - __FLASH_FONT_DIR_LEN - __FLASH_FONT_ROMS_LEN), LENGTH = __FLASH_CONFIG_LEN
     FLASH_FONT_DIR(r) : ORIGIN = 0x10000000 + (4096k - __FLASH_FONT_ROMS_LEN - __FLASH_FONT_DIR_LEN), LENGTH = __FLASH_FONT_DIR_LEN
     FLASH_FONT_ROMS(r): ORIGIN = 0x10000000 + (4096k - __FLASH_FONT_ROMS_LEN), LENGTH = __FLASH_FONT_ROMS_LEN
-    RAM(rwx)          : ORIGIN = 0x20000000, LENGTH = 384k
-    APPLEDATA(rwx)    : ORIGIN = 0x20060000, LENGTH = 128k
+    RAM(rwx)          : ORIGIN = 0x20000000, LENGTH = 512k
     SCRATCH_X(rwx)    : ORIGIN = 0x20080000, LENGTH = 4k
     SCRATCH_Y(rwx)    : ORIGIN = 0x20081000, LENGTH = 4k
 }
@@ -219,16 +218,6 @@ SECTIONS
 
     /* __etext is (for backwards compatibility) the name of the .data init source pointer (...) */
     __etext = LOADADDR(.data);
-    .delayed_copy : {
-        __ram_delayed_copy_start__ = .;
-        *(.delayed_code.*)
-        . = ALIGN(4);
-
-        *(.delayed_data.*)
-        . = ALIGN(4);
-        __ram_delayed_copy_end__ = .;
-    } > RAM AT> FLASH
-    __ram_delayed_copy_source__ = LOADADDR(.delayed_copy);
 
     .uninitialized_data (NOLOAD): {
         . = ALIGN(4);
@@ -256,13 +245,6 @@ SECTIONS
         . = ALIGN(4);
         __bss_end__ = .;
     } > RAM
-
-    .appledata (NOLOAD): {
-        __appledata_start__ = .;
-        *(.appledata.*)
-        . = ALIGN(4);
-        __appledata_end__ = .;
-    } > APPLEDATA
 
     .heap (NOLOAD):
     {
