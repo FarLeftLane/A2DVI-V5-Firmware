@@ -47,15 +47,13 @@ SOFTWARE.
     #define FUNCTION_PROFILER
 #endif
 
-#include "debug/profiler.h"
-
 #define VREG_VSEL         VREG_VOLTAGE_1_20
 
 void assert_processor_type(void)
 {
     io_ro_32 package = sysinfo_hw->package_sel;
 
-    if ((package & SYSINFO_PACKAGE_SEL_BITS) != 1)      //  0 = QFN80, 1 = QFN60
+    if ((package & SYSINFO_PACKAGE_SEL_BITS) != 0)      //  0 = QFN80, 1 = QFN60
     {
         //  Wrong processor
         printf("Wrong processor!\n");            
@@ -69,16 +67,14 @@ void assert_processor_type(void)
 
 int main()
 {
-    PROFILER_INIT(boot_time);
+    //  Check to make sure we are on the right processor for V5    ??? Change to QFN80
+    // assert_processor_type();
 
     // enable LED etc
     debug_init();
 
     //  Enable to reboot without BOOTSEL button
     stdio_init_all();                               //  ??? Turn off for abus or UART?
-
-    //  Check to make sure we are on the right processor for V5
-    assert_processor_type();
 
 #if 0                           //  ??? Disabled
     // check hardware
@@ -96,7 +92,6 @@ int main()
     // process the Apple II bus interface on core 1
     multicore_launch_core1(abus_loop);
 #endif
-    boot_time = to_us_since_boot(get_absolute_time());
 
     // DVI processing on core 0
     a2dvi_loop();
