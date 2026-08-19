@@ -23,8 +23,11 @@ SOFTWARE.
 */
 
 #include <string.h>
+#include <stdio.h>
+#include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include "hardware/vreg.h"
+#include <tusb.h>
 
 #include "dvi/a2dvi.h"
 #include "applebus/abus.h"
@@ -47,13 +50,13 @@ SOFTWARE.
 
 int main()
 {
-    // slightly rise the core voltage, preparation for overclocking
-    vreg_set_voltage(VREG_VSEL);
-
     PROFILER_INIT(boot_time);
 
     // enable LED etc
     debug_init();
+
+    //  Enable to reboot without BOOTSEL button
+    stdio_init_all();                               //  ??? Turn off for abus or UART?
 
 #if 0                           //  ??? Disabled
     // check hardware

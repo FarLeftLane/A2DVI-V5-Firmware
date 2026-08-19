@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "applebus/buffers.h"
 #include "config/config.h"
+#include "debug/debug.h"
 
 #include "render.h"
 #include "menu/menu.h"
@@ -67,8 +68,9 @@ char DELAYED_COPY_DATA(pLogo)[] =
     "   A    A  222222  DDDDD     VV    I\n";
 
 char DELAYED_COPY_DATA(pSplashMsg_0[]) = "APPLE II DIGITAL VIDEO";
-char DELAYED_COPY_DATA(pSplashMsg_1[]) = "COPYRIGHT 2024";
-char DELAYED_COPY_DATA(pSplashMsg_2[]) = "THORSTEN BREHM & RALLE PALAVEEV";
+char DELAYED_COPY_DATA(pSplashMsg_1[]) = "COPYRIGHT 2026";
+char DELAYED_COPY_DATA(pSplashMsg_2[]) = "MIKE NEIL & RALLE PALAVEEV";
+char DELAYED_COPY_DATA(pSplashMsg_3[]) = "THORSTEN BREHM";
 
 char DELAYED_COPY_DATA(pStatus6502_0[]) = "6502 STATUS";
 char DELAYED_COPY_DATA(pStatus6502_1[]) = "BUS CYCLES :";
@@ -118,6 +120,7 @@ void DELAYED_COPY_CODE(render_splash)()
     centerY(LINE_A2DIGITAL,   pSplashMsg_0, PRINTMODE_NORMAL);
     centerY(LINE_COPYRIGHT,   pSplashMsg_1, PRINTMODE_NORMAL);
     centerY(LINE_COPYRIGHT+1, pSplashMsg_2, PRINTMODE_NORMAL);
+    centerY(LINE_COPYRIGHT+2, pSplashMsg_3, PRINTMODE_NORMAL);
     centerY(LINE_6502,        pStatus6502_0, PRINTMODE_INVERSE);
     if (bus_cycle_counter < 3*1000)
         centerY(LINE_ACTIVITY,    pStatus6502_4, PRINTMODE_FLASH);
@@ -132,9 +135,10 @@ void DELAYED_COPY_CODE(render_splash)()
             case 0: // fall-through
             case 22:// fall-through
             case 23:color = 0xF4;break; // white, dark-green
-            case LINE_COPYRIGHT:// fall-through
+            case LINE_COPYRIGHT:    // fall-through
+            case LINE_COPYRIGHT+2:  // fall-through
             case LINE_COPYRIGHT+1:color = 0xD0|BGCOLOR;break; // yellow, black
-            case LINE_6502...LINE_6502+4:color = 0x90|BGCOLOR;break; // orange, black
+            case LINE_6502...LINE_6502+5:color = 0x90|BGCOLOR;break; // orange, black
         }
 
         for (uint8_t i=0;i<40;i++)
@@ -170,6 +174,7 @@ void DELAYED_COPY_CODE(render_splash)()
     printXY(X1, LINE_6502+1, "BUS CYCLES :",   PRINTMODE_NORMAL);
     printXY(X1, LINE_6502+2, "ADDRESS BUS: ?", PRINTMODE_NORMAL);
     printXY(X1, LINE_6502+3, "PC         : ?", PRINTMODE_NORMAL);
+    printXY(X1, LINE_6502+5, "FREE HEAP  :",   PRINTMODE_NORMAL);
 
     // enable DVI output now
     a2dvi_dvi_enable(cfg_video_mode);
@@ -184,6 +189,9 @@ void DELAYED_COPY_CODE(render_splash)()
         {
             // show number of bus cycles
             int2hex(text_page+TEXT_OFFSET(LINE_6502+1)+X2, bus_cycle_counter, 8);
+
+            // show free heap
+            int2hex(text_page+TEXT_OFFSET(LINE_6502+5)+X2, getFreeHeap(), 8);
 
             if (bus_cycle_counter>0)
             {

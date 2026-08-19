@@ -133,14 +133,16 @@ target_link_libraries(A2DVI
     pico_runtime
     pico_multicore
     pico_util
+    
     hardware_flash
     hardware_vreg
     hardware_clocks
-
     hardware_dma
     hardware_pio
     hardware_interp
     hardware_pwm
+
+    pico_stdlib
 )
 
 # Add the standard include files to the build
