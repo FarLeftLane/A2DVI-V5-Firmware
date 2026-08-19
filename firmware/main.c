@@ -28,6 +28,9 @@ SOFTWARE.
 #include "pico/multicore.h"
 #include "hardware/vreg.h"
 #include <tusb.h>
+#include "hardware/structs/sysinfo.h"
+#include <hardware/watchdog.h>
+#include "pico/bootrom.h"
 
 #include "dvi/a2dvi.h"
 #include "applebus/abus.h"
@@ -48,6 +51,22 @@ SOFTWARE.
 
 #define VREG_VSEL         VREG_VOLTAGE_1_20
 
+void assert_processor_type(void)
+{
+    io_ro_32 package = sysinfo_hw->package_sel;
+
+    if ((package & SYSINFO_PACKAGE_SEL_BITS) != 1)      //  0 = QFN80, 1 = QFN60
+    {
+        //  Wrong processor
+        printf("Wrong processor!\n");            
+        sleep_ms(1*1000);
+        
+        //  Reboot into BOOTSEL
+        rom_reset_usb_boot_extra(-1, 0, false);
+        // does not return, otherwise we'd return true
+    }
+}
+
 int main()
 {
     PROFILER_INIT(boot_time);
@@ -57,6 +76,9 @@ int main()
 
     //  Enable to reboot without BOOTSEL button
     stdio_init_all();                               //  ??? Turn off for abus or UART?
+
+    //  Check to make sure we are on the right processor for V5
+    assert_processor_type();
 
 #if 0                           //  ??? Disabled
     // check hardware
