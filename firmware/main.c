@@ -55,8 +55,10 @@ int main()
     // enable LED etc
     debug_init();
 
+#if 0                           //  ??? Disabled
     // check hardware
     a2dvi_check_hardware();
+#endif
 
     // load config settings
     config_load();

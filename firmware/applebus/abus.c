@@ -692,7 +692,9 @@ void __time_critical_func(abus_init)()
 void __time_critical_func(abus_loop)()
 {
     // initialize the Apple II bus interface
+#if 0                           //  ??? Disabled
     abus_init();
+#endif 
 
     uint32_t value = 0;
 #if FEATURE_ABUS_DEBUG
