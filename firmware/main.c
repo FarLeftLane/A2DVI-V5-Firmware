@@ -27,7 +27,7 @@ SOFTWARE.
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include "hardware/vreg.h"
-#include <tusb.h>
+// #include <tusb.h>
 #include "hardware/structs/sysinfo.h"
 #include <hardware/watchdog.h>
 #include "pico/bootrom.h"
@@ -67,14 +67,14 @@ void assert_processor_type(void)
 
 int main()
 {
-    //  Check to make sure we are on the right processor for V5    ??? Change to QFN80
-    // assert_processor_type();
+    //  Check to make sure we are on the right processor for A2DVIV5
+    assert_processor_type();
 
     // enable LED etc
     debug_init();
 
     //  Enable to reboot without BOOTSEL button
-    stdio_init_all();                               //  ??? Turn off for abus or UART?
+    // stdio_init_all();                               //  ??? Turn off for abus or UART?
 
 #if 0                           //  ??? Disabled
     // check hardware
@@ -84,15 +84,15 @@ int main()
     // load config settings
     config_load();
 
+    // DVI processing on core 1
+    multicore_launch_core1(a2dvi_loop);
+
 #ifdef FEATURE_TEST
     // start testsuite, simulating some 6502 activity and
     // cycle through the test cases
-    multicore_launch_core1(test_loop);
+    test_loop();
 #else
-    // process the Apple II bus interface on core 1
-    multicore_launch_core1(abus_loop);
+    // process the Apple II bus interface on core 0
+    abus_loop();
 #endif
-
-    // DVI processing on core 0
-    a2dvi_loop();
 }

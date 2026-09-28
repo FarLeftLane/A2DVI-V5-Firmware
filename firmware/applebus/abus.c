@@ -675,9 +675,9 @@ static inline void abus_interface(uint32_t value)
 
 void __time_critical_func(abus_clear_fifo)(void)
 {
-    while (abus_pio_fifo_level())
+    while (abus_pio_addr_fifo_level())
     {
-        (void) abus_pio_blocking_read();
+        (void) abus_pio_addr_blocking_read();
     }
 }
 
@@ -692,39 +692,21 @@ void __time_critical_func(abus_init)()
 void __time_critical_func(abus_loop)()
 {
     // initialize the Apple II bus interface
-#if 0                           //  ??? Disabled
     abus_init();
-#endif 
 
     uint32_t value = 0;
-#if FEATURE_ABUS_DEBUG
-    uint32_t idle_count = 0;
-    bus_overflow_counter = 0xffff;
-#endif
+
     while(1)
     {
-        if (abus_pio_is_full())
-        {
-            bus_overflow_counter++;
-            value = abus_pio_read();
-        }
-        else
-        {
-#ifdef FEATURE_ABUS_DEBUG
-            idle_count = 0;
-            while (abus_pio_is_empty()) idle_count++;
-            value = abus_pio_read();
-#else
-            value = abus_pio_blocking_read();
-#endif
-        }
+        //  Read the address
+        value = abus_pio_addr_blocking_read();
 
+        //  Then read the data and or it into the value
+        value |= abus_pio_data_blocking_read();
+
+        //  Process the value
         abus_interface(value);
 
-#ifdef FEATURE_ABUS_DEBUG
-        if (idle_count < bus_overflow_counter)
-            bus_overflow_counter = idle_count;
-#endif
         bus_cycle_counter++;
     }
 }

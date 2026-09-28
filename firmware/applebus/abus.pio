@@ -2,6 +2,7 @@
 ;
 ; Copyright (c) 2021 Mark Aikens
 ; Copyright (c) 2024 Thorsten Brehm
+; Copyright (c) 2026 Michael Neil
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -21,55 +22,155 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-.define public PHI0_GPIO 26
-
-; SET bits for transceiver control:
-;                    0bxxx
-;                      x..  - select AddrHi, active low
-;                      .x.  - select AddrLo, active low
-;                      ..x  - select Data, active low
-.define CTRL_ADDRHI  0b011
-.define CTRL_ADDRLO  0b101
-.define CTRL_DATAIN  0b110
-.define CTRL_NONE    0b111
-
 ; Apple II bus interface
 ; Ref: Understanding the Apple II, pages 4-7, 7-8
 
-.program abus
-; Prerequisites:
-;  * Bus clock used is PHI0
-;  * JMP pin is mapped to the R/W signal
-;  * IN pins are mapped to Data[7:0], ~SELECT, R/W
-;  * SET pins are mapped to the transceiver enable signals
-;  * input shift left & autopush @ 26 bits
-;  * run at about 250MHz (4ns/instruction)
+; .define public PHI0_GPIO 26
+
+; A2DVI v5 Pins
+; 0-7   D0-D7
+; 8     /DEVSEL
+; 9     /IOSEL
+; 10    /IOSTRB
+; 11    /RESET
+; 12-19 HSTX DVI        --- 16 base
+; 20-35 A0-A15
+; 36    M2B0
+; 37    R/W
+; 38    /M2SEL
+; 39    PHI0
+; 40    I2C0 SDA (RTC)
+; 41    I2C0 SDL (RTC)
+; 42    Button
+; 43    NC (LED?)
+; 44    UART0 TX
+; 45    UART0 RX
+; 46    UART header extra
+; 47    NC (PSRAM)
 ;
+; We read the address lines with M2B0 and R/W on Phi0 going high, then use a cross PIO IRQ to signal the
+; data SM to read the data lines with the 3 select signals.  In the C code with read the address and then or
+; in the data to create the full value.
+
+.pio_version 1                          // We need version 1 (not 0) for RP2350
+
+.define public  GPIO_RW             37  // Read / Write pin
+.define public  M2SEL_PIN           38  // M2SEL pin (inverted)
+.define public  M2B0_PIN            36  // M2B0 pin ???  Currently PB_EX1
+
+.define public  GPIO_IN_ADDR_BASE   20  // base of the A0-A15 range
+.define public  IN_ADDR_SIZE        18  // incl. addr, M2B0 and RW, but not selects or data
+.define public  IN_ADDR_PAD         (32 - IN_ADDR_SIZE)                     //  Number of bits to pad
+.define public  IN_DATA_SIZE        11  // incl. data and selects
+.define public  IN_ADDR_TOP_PAD     (32 - IN_DATA_SIZE - IN_ADDR_SIZE)      //  Number of bits to pad (3 bits)
+.define public  IN_DATA_PAD         (32 - IN_DATA_SIZE)                     //  Number of bits to pad (21 bits)
+
+.define public  GPIO_DATA           0   // base of the D0-D7 range
+.define public  SIZE_DATA           8   // 8-bits 
+
+.define public  PHI0_PIN            39  // Phi0 Clock
+.define public  PHI0_PIN_OFFSET     (PHI0_PIN - GPIO_IN_ADDR_BASE)          // Phi0 Clock offset from addr base for input
+
+.define public  DEVSEL_PIN          8   // DEVSEL  (inverted) (Note that DEVSEL and IOSEL are reversed on Proto Board)
+.define public  IOSEL_PIN           9   // IOSEL   (inverted)
+.define public  IOSTRB_PIN          10  // IOSTRB  (inverted)
+
+; .define public  IRQ_VBL_SYNC        2   // used to signal the VBL sync handler
+
+.define         IRQ_WRITE           4   // used to signal the "write" SM
+.define         IRQ_M2SEL           5   // used to signal the N2B0 SM
+
+
+; PIO0 Base 16
+
+.program abus_addr
+    wait 1 pin PHI0_PIN_OFFSET [8]      // wait for Phi0 high (pin is an offset from GPIO_IN_ADDR_BASE)
+
+    wait 0 pin PHI0_PIN_OFFSET [8]      // wait for Phi0 to go low, 8 is to debounce
+
 .wrap_target
-next_bus_cycle:
-    set PINS, CTRL_ADDRHI               ; enable AddrHi transceiver
-    wait 1 GPIO, PHI0_GPIO              ; wait for PHI0 to rise. Data propagation through the transceiver should
-                                        ; be complete by the time this happens.
+    in NULL, IN_ADDR_TOP_PAD            // Pad with zeros (3 bits)
 
-    ; the current time is P0+42ns (P0 + 18ns (buffer + clock input delays) + 2 clocks (input synchronizers) + 1 instruction)
+                                        // this is the Apple II video circuit part of the cycle
 
-    in PINS, 8                          ; read AddrHi[7:0]
-    set PINS, CTRL_ADDRLO    [10]       ; enable AddrLo transceiver and delay for transceiver propagation delay
-    in PINS, 8                          ; read AddrLo[7:0]
+    wait 1 pin PHI0_PIN_OFFSET [5]      // wait for Phi0 to go high and 5 cycles, don't wait for DEV/IO/Strobe to stablize (2 work on a GS at 250Mhz, 3 works on a IIe)
 
-    jmp PIN, read_cycle                 ; jump based on the state of the R/W pin
+    in pins, IN_ADDR_SIZE               // Read the R/W, M2B0 and A0-A15 (18 bits)
+    in NULL, IN_DATA_SIZE               // Pad the rest for data (11 bits)
 
-write_cycle:
-    ; the current time is P0+114ns (P0 + 18ns (buffer + clock input delays) + 2 clocks (input synchronizers) + 10 instructions)
+    wait 0 pin PHI0_PIN_OFFSET          // wait for Phi0 to go low, 8 to debounce
 
-    set PINS, CTRL_DATAIN    [30]       ; enable Data transceiver & wait until both ~SELECT and the written data are valid (P0+200ns)
-    in PINS, 10                         ; read Data[7:0], ~SELECT and R/W then autopush
-    wait 0 GPIO, PHI0_GPIO   [7]        ; wait for PHI0 to fall
-    jmp next_bus_cycle
-
-read_cycle:
-    ; the current time is P0+114ns (P0 + 18ns (buffer + clock input delays) + 2 clocks (input synchronizers) + 10 instructions)
-
-    in PINS, 10                         ; read dontcare[7:0], ~SELECT and R/W and then autopush
-    wait 0 GPIO, PHI0_GPIO   [7]        ; wait for PHI0 to fall
+    irq prev IRQ_WRITE [6]              // set 'write' IRQ, 6 to debounce PHI0.  IRQ_WRITE is being waited on in PIO2 SM0 (program abus_write), so we signal prev (PIO0->PIO2)
 .wrap
+
+% c-sdk {
+
+static inline void abus_addr_program_set_config(PIO pio, uint sm, pio_sm_config *c) 
+{
+    // in_base:         GPIO_IN_ADDR_BASE
+    sm_config_set_in_pins(c, GPIO_IN_ADDR_BASE);
+
+    //  Init the pins A0 through PHI0
+    for (uint gpio = GPIO_IN_ADDR_BASE; gpio <= PHI0_PIN; gpio++) 
+    {
+        pio_gpio_init(pio, gpio);
+        gpio_disable_pulls(gpio);
+//        gpio_set_input_hysteresis_enabled(gpio, true);                 //  ??? Need to investigate if this is needed
+    }
+
+    // Set to input
+    pio_sm_set_consecutive_pindirs(pio, sm, GPIO_IN_ADDR_BASE, PHI0_PIN_OFFSET, false);
+
+    // shift_right:     false
+    // autopush:        true
+    // push_threshold:  32      //  We use (IN_ADDR_PAD)) to zero out the other bits
+    sm_config_set_in_shift(c, false, true, 32);
+
+    // Join the RX fifo
+    sm_config_set_fifo_join(c, PIO_FIFO_JOIN_RX);
+}
+
+%}
+
+///////////////////////////////////////////////////////////////////////////////
+
+;   PIO2 base 0
+
+.program abus_write
+
+.wrap_target
+    in NULL, IN_DATA_PAD          // Pad top with zeros (21 bits)
+
+    wait 1 irq IRQ_WRITE          // wait for 'write' IRQ to be set and clear it
+
+    in pins, IN_DATA_SIZE         // Read the D0-D7 and select signals (11 bits)
+.wrap
+
+% c-sdk {
+    
+static inline void abus_write_program_set_config(PIO pio, uint sm, pio_sm_config *c) 
+{
+    // in_base:         GPIO_DATA
+    sm_config_set_in_pins(c, GPIO_DATA);
+
+    //  Init the pins
+    for (uint gpio = GPIO_DATA; gpio <= (GPIO_DATA + IN_DATA_SIZE); gpio++) 
+    {
+        pio_gpio_init(pio, gpio);
+        gpio_disable_pulls(gpio);
+//        gpio_set_input_hysteresis_enabled(gpio, true);                 //  ??? Need to investigate if this is needed
+    }
+
+    // Set to input
+    pio_sm_set_consecutive_pindirs(pio, sm, GPIO_DATA, IN_DATA_SIZE, false);
+
+    // shift_right:     false
+    // autopush:        true
+    // push_threshold:  32        //  We use 32 to zero out the other bits
+    sm_config_set_in_shift(c, false, true, 32);
+
+    // Join the RX fifo
+    sm_config_set_fifo_join(c, PIO_FIFO_JOIN_RX);
+}
+
+%}

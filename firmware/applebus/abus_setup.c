@@ -31,87 +31,62 @@ SOFTWARE.
 #include "dvi/a2dvi.h"
 #include "debug/debug.h"
 
-#if CONFIG_PIN_APPLEBUS_PHI0 != PHI0_GPIO
-#error CONFIG_PIN_APPLEBUS_PHI0 and PHI0_GPIO must be set to the same pin
-#endif
+
+typedef struct a2_sm
+{
+    uint          offset;
+    pio_sm_config config;
+} a2_sm_t;
+
+static a2_sm_t s_addr_sm;
+static a2_sm_t s_write_sm;
+
 
 void a2dvi_check_hardware(void)
 {
-    // initialize transceiver GPIOs
-    gpio_init_mask(0x7 << CONFIG_PIN_APPLEBUS_CONTROL_BASE);
-    for (uint i=0;i<3;i++)
-    {
-        gpio_set_pulls(CONFIG_PIN_APPLEBUS_CONTROL_BASE+i, false, false);
-    }
-
-    // check hardware
-    {
-        uint32_t bits = (gpio_get_all() >> CONFIG_PIN_APPLEBUS_CONTROL_BASE) & 0x7;
-        if (bits != 0x7)
-        {
-            // bad board hardware or defect: don't continue
-            while (1)
-            {
-                debug_sos();
-                debug_error(bits+1);
-            }
-        }
-    }
+    //  ??? Is there anything we can check?
 }
 
 void abus_pio_setup(void)
 {
-    PIO pio = CONFIG_ABUS_PIO;
-    const uint sm = ABUS_MAIN_SM;
-    const uint32_t control_bit_count = 3;
+    //  The addr PIO is offset to a base of 16
+    pio_set_gpio_base(CONFIG_ABUS_ADDR_PIO,  16);
 
-    uint program_offset = pio_add_program(pio, &abus_program);
-    pio_sm_claim(pio, sm);
+    //  The data PIO is base 0
+    pio_set_gpio_base(CONFIG_ABUS_DATA_PIO,  0);
 
-    pio_sm_config pio_cfg = abus_program_get_default_config(program_offset);
+#if 0
+    //  Invert these active low signals to be more clear in other code
+    gpio_set_inover(DEVSEL_PIN, GPIO_OVERRIDE_INVERT);
+    gpio_set_inover(IOSEL_PIN, GPIO_OVERRIDE_INVERT);
+    gpio_set_inover(IOSTRB_PIN, GPIO_OVERRIDE_INVERT);
+    gpio_set_inover(M2SEL_PIN, GPIO_OVERRIDE_INVERT);
+#endif
 
-    // set the bus R/W pin as the jump pin
-    sm_config_set_jmp_pin(&pio_cfg, CONFIG_PIN_APPLEBUS_RW);
+    //  Setup the addr SM
+    s_addr_sm.offset = pio_add_program(CONFIG_ABUS_ADDR_PIO, &abus_addr_program);
+    s_addr_sm.config = abus_addr_program_get_default_config(s_addr_sm.offset);
+    abus_addr_program_set_config(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM, &s_addr_sm.config);
+    pio_sm_claim(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM);
 
-    // map the IN pin group to the data signals
-    sm_config_set_in_pins(&pio_cfg, CONFIG_PIN_APPLEBUS_DATA_BASE);
+    //  Setup the data write SM
+    s_write_sm.offset = pio_add_program(CONFIG_ABUS_DATA_PIO, &abus_write_program);
+    s_write_sm.config = abus_write_program_get_default_config(s_write_sm.offset);
+    abus_write_program_set_config(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM, &s_write_sm.config);
+    pio_sm_claim(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM);
 
-    // map the SET pin group to the bus transceiver enable signals
-    sm_config_set_set_pins(&pio_cfg, CONFIG_PIN_APPLEBUS_CONTROL_BASE, control_bit_count);
+    //  Init the SMs
+    pio_sm_init(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM, s_addr_sm.offset, &s_addr_sm.config);
+    pio_sm_init(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM, s_write_sm.offset, &s_write_sm.config);
 
-    // configure left shift into ISR & autopush every 26 bits (8 data + 16 address + select + r/w = 26)
-    sm_config_set_in_shift(&pio_cfg, false, true, 26);
+    //  Start data and then addr
+    pio_sm_set_enabled(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM, true);
+    pio_sm_set_enabled(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM, true);
 
-    // no divider, run at full speed
-    sm_config_set_clkdiv_int_frac(&pio_cfg, 1, 0);
-
-    pio_sm_init(pio, sm, program_offset, &pio_cfg);
-
-    // configure the GPIOs
-    // Ensure all transceivers will start disabled. Set data direction to input (low).
-    pio_sm_set_pins_with_mask(
-        pio, sm, (uint32_t)0x7 << CONFIG_PIN_APPLEBUS_CONTROL_BASE, (uint32_t)0x7 << CONFIG_PIN_APPLEBUS_CONTROL_BASE);
-    pio_sm_set_pindirs_with_mask(pio, sm, (0x7 << CONFIG_PIN_APPLEBUS_CONTROL_BASE),
-        (1 << CONFIG_PIN_APPLEBUS_PHI0) | (0x7 << CONFIG_PIN_APPLEBUS_CONTROL_BASE) | (0x3ff << CONFIG_PIN_APPLEBUS_DATA_BASE));
-
+#if 0
+    //  ??? Is this needed?
     // Disable input synchronization on input pins that are sampled at known stable times
     // to shave off two clock cycles of input latency
     pio->input_sync_bypass |= (0x3ff << CONFIG_PIN_APPLEBUS_DATA_BASE);
-
-    pio_gpio_init(pio, CONFIG_PIN_APPLEBUS_PHI0);
-    gpio_set_pulls(CONFIG_PIN_APPLEBUS_PHI0, false, false);
-
-    for(int pin = CONFIG_PIN_APPLEBUS_CONTROL_BASE; pin < CONFIG_PIN_APPLEBUS_CONTROL_BASE + control_bit_count; pin++)
-    {
-        pio_gpio_init(pio, pin);
-    }
-
-    // initialize GPIO on all 8 data pins + SELECT + RW = 10
-    for(int pin = CONFIG_PIN_APPLEBUS_DATA_BASE; pin < CONFIG_PIN_APPLEBUS_DATA_BASE + 10; pin++)
-    {
-        pio_gpio_init(pio, pin);
-        gpio_set_pulls(pin, false, false);
-    }
-
-    pio_enable_sm_mask_in_sync(pio, (1 << ABUS_MAIN_SM));
+#endif
 }

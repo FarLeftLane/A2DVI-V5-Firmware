@@ -27,6 +27,8 @@ SOFTWARE.
 
 #include "abus_pin_config.h"
 
+//  ??? Can we inlcude the pio public defines for this?
+
 void abus_init      (void);
 void abus_loop      (void);
 void abus_clear_fifo(void);
@@ -34,10 +36,11 @@ void abus_clear_fifo(void);
 void abus_interface (uint32_t value);
 #endif
 
+#define ABUS_DATA_SIZE    (11)      //  This should match IN_DATA_SIZE
 #define ACCESS_WRITE(value)    ((value & (1u << (CONFIG_PIN_APPLEBUS_RW     - CONFIG_PIN_APPLEBUS_DATA_BASE))) == 0)
 #define ACCESS_READ(value)     ((value & (1u << (CONFIG_PIN_APPLEBUS_RW     - CONFIG_PIN_APPLEBUS_DATA_BASE))) != 0)
 #define CARD_SELECT(value)     ((value & (1u << (CONFIG_PIN_APPLEBUS_SELECT - CONFIG_PIN_APPLEBUS_DATA_BASE))) == 0)
-#define ADDRESS_BUS(value)               ((value >> 10) & 0xffff)
-#define ADDRESS_BUS_HI_NIBBLE(value)     ((value >> (10+12)) & 0xf)
-#define ADDRESS_BUS_HI_BYTE(value)       ((value >> (10+8)) & 0xff)
+#define ADDRESS_BUS(value)               ((value >> ABUS_DATA_SIZE) & 0xffff)
+#define ADDRESS_BUS_HI_NIBBLE(value)     ((value >> (ABUS_DATA_SIZE + 12)) & 0xf)
+#define ADDRESS_BUS_HI_BYTE(value)       ((value >> (ABUS_DATA_SIZE + 8)) & 0xff)
 #define DATA_BUS(value)                  (value & 0xff)

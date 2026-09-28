@@ -26,17 +26,22 @@ SOFTWARE.
 
 #include <hardware/pio.h>
 
-// use PIO 0 (PIO1 is used for VGA/DVI)
-#define CONFIG_ABUS_PIO pio0
+// use PIO 0 (PIO1 is used for DVI)
+#define CONFIG_ABUS_ADDR_PIO pio0       //  Base 16
+#define CONFIG_ABUS_DATA_PIO pio2       //  Base 0
 
 // statemachines (0-3)
-#define ABUS_MAIN_SM    0
+#define ABUS_ADDR_SM    0               //  PIO 0
+#define ABUS_DATA_SM    0               //  PIO 2
 
-#define abus_pio_fifo_level()       (pio_sm_get_rx_fifo_level(CONFIG_ABUS_PIO, ABUS_MAIN_SM))
-#define abus_pio_is_full()          (pio_sm_is_rx_fifo_full(CONFIG_ABUS_PIO, ABUS_MAIN_SM))
-#define abus_pio_is_empty()         (pio_sm_is_rx_fifo_empty(CONFIG_ABUS_PIO, ABUS_MAIN_SM))
+#define abus_pio_addr_fifo_level()       (pio_sm_get_rx_fifo_level(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
+#define abus_pio_addr_is_full()          (pio_sm_is_rx_fifo_full(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
+#define abus_pio_addr_is_empty()         (pio_sm_is_rx_fifo_empty(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
 
-#define abus_pio_read()             (pio_sm_get(CONFIG_ABUS_PIO, ABUS_MAIN_SM))
-#define abus_pio_blocking_read()    (pio_sm_get_blocking(CONFIG_ABUS_PIO, ABUS_MAIN_SM))
+#define abus_pio_addr_read()             (pio_sm_get(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
+#define abus_pio_addr_blocking_read()    (pio_sm_get_blocking(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
+
+
+#define abus_pio_data_blocking_read()    (pio_sm_get_blocking(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM))
 
 void abus_pio_setup(void);
