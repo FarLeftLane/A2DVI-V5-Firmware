@@ -157,7 +157,7 @@ static inline void abus_write_program_set_config(PIO pio, uint sm, pio_sm_config
     sm_config_set_in_pins(c, GPIO_DATA);
 
     //  Init the pins
-    for (uint gpio = GPIO_DATA; gpio <= (GPIO_DATA + IN_DATA_SIZE); gpio++) 
+    for (uint gpio = GPIO_DATA; gpio < (GPIO_DATA + IN_DATA_SIZE); gpio++) 
     {
         pio_gpio_init(pio, gpio);
         gpio_disable_pulls(gpio);

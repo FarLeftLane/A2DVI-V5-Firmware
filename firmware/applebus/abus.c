@@ -688,6 +688,10 @@ void __time_critical_func(abus_init)()
     videx_vterm_init();
 #endif
     abus_pio_setup();
+
+    //  Release RESET
+    gpio_set_dir(CONFIG_PIN_RESET, GPIO_IN);
+    gpio_put(CONFIG_PIN_RESET, 0);
 }
 
 void __time_critical_func(abus_loop)()

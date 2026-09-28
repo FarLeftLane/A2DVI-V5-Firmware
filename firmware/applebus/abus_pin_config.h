@@ -31,3 +31,5 @@ SOFTWARE.
 #define CONFIG_PIN_APPLEBUS_SELECT       (CONFIG_PIN_APPLEBUS_DATA_BASE + 8)
 #define CONFIG_PIN_APPLEBUS_RW           (CONFIG_PIN_APPLEBUS_DATA_BASE + 28)       //  This is the position in the FIFO value, not the GPIO
 #define CONFIG_PIN_LANGUAGE_SW           (CONFIG_PIN_APPLEBUS_DATA_BASE + 42)
+
+#define CONFIG_PIN_RESET                 (11)

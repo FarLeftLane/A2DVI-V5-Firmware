@@ -70,6 +70,12 @@ int main()
     //  Check to make sure we are on the right processor for A2DVIV5
     assert_processor_type();
 
+    //  Hold the reset line low, open collector
+    gpio_init(CONFIG_PIN_RESET);
+    gpio_disable_pulls(CONFIG_PIN_RESET);
+    gpio_put(CONFIG_PIN_RESET, 0);
+    gpio_set_dir(CONFIG_PIN_RESET, GPIO_OUT);
+
     // enable LED etc
     debug_init();
 
