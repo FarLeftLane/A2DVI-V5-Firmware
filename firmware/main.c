@@ -84,6 +84,11 @@ int main()
     // load config settings
     config_load();
 
+    // Enable debug lines
+#ifdef FEATURE_DEBUG_COUNTER
+    SET_IFLAG(1, IFLAGS_DEBUG_LINES);
+#endif
+
     // DVI processing on core 1
     multicore_launch_core1(a2dvi_loop);
 

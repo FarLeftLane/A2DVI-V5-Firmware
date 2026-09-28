@@ -678,6 +678,7 @@ void __time_critical_func(abus_clear_fifo)(void)
     while (abus_pio_addr_fifo_level())
     {
         (void) abus_pio_addr_blocking_read();
+        (void) abus_pio_data_blocking_read();
     }
 }
 

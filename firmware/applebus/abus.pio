@@ -75,7 +75,7 @@
 .define public  IOSEL_PIN           9   // IOSEL   (inverted)
 .define public  IOSTRB_PIN          10  // IOSTRB  (inverted)
 
-; .define public  IRQ_VBL_SYNC        2   // used to signal the VBL sync handler
+; .define public  IRQ_VBL_SYNC      2   // used to signal the VBL sync handler
 
 .define         IRQ_WRITE           4   // used to signal the "write" SM
 .define         IRQ_M2SEL           5   // used to signal the N2B0 SM
@@ -96,11 +96,14 @@
     wait 1 pin PHI0_PIN_OFFSET [5]      // wait for Phi0 to go high and 5 cycles, don't wait for DEV/IO/Strobe to stablize (2 work on a GS at 250Mhz, 3 works on a IIe)
 
     in pins, IN_ADDR_SIZE               // Read the R/W, M2B0 and A0-A15 (18 bits)
-    in NULL, IN_DATA_SIZE               // Pad the rest for data (11 bits)
+    in NULL, IN_DATA_SIZE      [31]     // Pad the rest for data (11 bits)
 
-    wait 0 pin PHI0_PIN_OFFSET          // wait for Phi0 to go low, 8 to debounce
+    nop                        [29]     // delay (30) till 75 cycles, ??? will this work in 640x480 mode?
 
-    irq prev IRQ_WRITE [6]              // set 'write' IRQ, 6 to debounce PHI0.  IRQ_WRITE is being waited on in PIO2 SM0 (program abus_write), so we signal prev (PIO0->PIO2)
+    irq prev IRQ_WRITE                  // set 'write' IRQ.  IRQ_WRITE is being waited on in PIO2 SM0 (program abus_write), so we signal prev (PIO0->PIO2)
+
+    wait 0 pin PHI0_PIN_OFFSET [8]      // wait for Phi0 to go low, 8 to debounce
+
 .wrap
 
 % c-sdk {
