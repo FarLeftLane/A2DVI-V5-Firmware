@@ -28,6 +28,7 @@ SOFTWARE.
 #include <string.h>
 #include <malloc.h>
 #include <hardware/flash.h>
+#include <hardware/sync.h>
 
 #include "config.h"
 #include "applebus/buffers.h"
@@ -231,8 +232,14 @@ bool DELAYED_COPY_CODE(config_flash_write)(void* flash_address, uint8_t* data, u
 
     const uint32_t flash_offset = ((uint32_t) flash_address) - XIP_BASE;
 
+    //  Save and disable interrupts
+    uint32_t interrupts = save_and_disable_interrupts();
+
     flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
     flash_range_program(flash_offset, data, size);
+
+    //  Restore interrupts
+    restore_interrupts(interrupts);
 
     return true;
 }
@@ -247,8 +254,15 @@ void DELAYED_COPY_CODE(config_font_update)(void)
     struct fontdir_t new_dir;
     new_dir.magic_word = FONT_MAGIC_WORD_VALUE;
     new_dir.invalid_fonts = invalid_fonts;
+
+    //  Save and disable interrupts
+    uint32_t interrupts = save_and_disable_interrupts();
+
     flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
     flash_range_program(flash_offset, (uint8_t*) &new_dir, sizeof(new_dir));
+
+    //  Restore interrupts
+    restore_interrupts(interrupts);
 }
 
 static uint8_t check_valid_font(uint32_t font_nr)
@@ -422,9 +436,12 @@ void config_load_defaults(void)
 
 void DELAYED_COPY_CODE(config_save)(void)
 {
-    // the write buffer size must be a multiple of FLASH_PAGE_SIZE so round up
-    const int new_config_size = (sizeof(struct config_t) + FLASH_PAGE_SIZE - 1) & -FLASH_PAGE_SIZE;
+    // the write buffer size must be a multiple of FLASH_SECTOR_SIZE so round up
+    const int new_config_size = (sizeof(struct config_t) + FLASH_SECTOR_SIZE - 1) & -FLASH_SECTOR_SIZE;
     struct config_t *new_config = malloc(new_config_size);
+    if (new_config == NULL)
+        return;
+    
     memset(new_config, 0xff, new_config_size);
     memset(new_config, 0, sizeof(struct config_t));
 
