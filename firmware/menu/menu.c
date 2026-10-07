@@ -426,14 +426,14 @@ static char DELAYED_COPY_DATA(AboutText)[]=
     "STREAMS (3X252MBIT/S) FOR DVI/HDMI.\0"      //10
     " \0"                                        //11
     "MORE: GITHUB.COM/RALLEPALAVEEV/A2DVI\0"     //12
-    "   GITHUB.COM/THORSTENBR/A2DVI-FIRMWARE\0"  //13
-    " \0"                                        //14
+    "GITHUB.COM/FARLEFTLANE/A2DVI-V5-FIRMWARE\0" //13
+    "THORSTENBR FOR A2DVI V2 AND V4 \0"          //14
     "A2DVI IS BASED ON PROJECTS 'APPLEII VGA'\0" //15
     "(C) 2021 MARK AIKENS & DAVID KUDER,  AND\0" //16
     "ON 'PICODVI' (C) 2021 LUKE WREN.\0"         //17
     "  MANY THANKS TO ALL! APPLE II FOREVER!\0"  //18
     " \0"                                        //19
-    "           THORSTEN AND RALLE\0\0"          //20
+    "           MIKE AND RALLE\0\0"              //20
 };
 
 void DELAYED_COPY_CODE(menuVideo7Text)()
