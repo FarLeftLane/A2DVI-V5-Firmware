@@ -65,16 +65,28 @@ void assert_processor_type(void)
     }
 }
 
-int main()
+void board_init(void)
 {
-    //  Check to make sure we are on the right processor for A2DVIV5
-    assert_processor_type();
-
     //  Hold the reset line low, open collector
     gpio_init(CONFIG_PIN_RESET);
     gpio_disable_pulls(CONFIG_PIN_RESET);
     gpio_put(CONFIG_PIN_RESET, 0);
     gpio_set_dir(CONFIG_PIN_RESET, GPIO_OUT);
+
+    //  Setup the button
+    gpio_init(CONFIG_PIN_LANGUAGE_SW);
+    gpio_set_dir(CONFIG_PIN_LANGUAGE_SW, GPIO_IN);
+    gpio_pull_up(CONFIG_PIN_LANGUAGE_SW);
+    sleep_ms(1);                                    //  Need a bit for the pull_up to register
+}
+
+int main()
+{
+    //  Check to make sure we are on the right processor for A2DVIV5
+    assert_processor_type();
+
+    //  Hold the A2 in reset and setup other board HW
+    board_init();
 
     // enable LED etc
     debug_init();
@@ -87,6 +99,20 @@ int main()
     a2dvi_check_hardware();
 #endif
 
+    //  Read the button state and reset settings if pressed
+    bool button_pressed = !gpio_get(CONFIG_PIN_LANGUAGE_SW);
+
+    if (button_pressed)
+    {
+        dbg_counter1 = 2;
+
+        //  Revert to defaults
+        config_load_defaults();
+
+        //  Save these settings
+        config_save();
+    }
+    
     // load config settings
     config_load();
 
