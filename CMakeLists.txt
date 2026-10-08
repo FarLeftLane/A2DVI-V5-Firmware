@@ -33,9 +33,9 @@ set(PICO_BOARD_HEADER_DIRS "${CMAKE_CURRENT_LIST_DIR}/firmware/boards")
 
 include(pico_sdk_import.cmake)
 # firmware version
-set(FW_VERSION "5.0a")
+set(FW_VERSION "5.0.1a")
 message(STATUS "Building firmware version ${FW_VERSION}")
-project(A2DVI-V5-v5.0a C CXX ASM)
+project(A2DVI-V5-v5.0.1a C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
