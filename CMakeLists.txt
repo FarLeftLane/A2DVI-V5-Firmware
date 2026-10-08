@@ -49,7 +49,7 @@ add_compile_options(-DDVI_N_TMDS_BUFFERS=8)
 add_compile_options(-DFW_VERSION="${FW_VERSION}")
 
 # Enable the debug counters
-add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
+# add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
 
 # Add executable. Default name is the project name, version 0.1
 

@@ -104,8 +104,6 @@ int main()
 
     if (button_pressed)
     {
-        dbg_counter1 = 2;
-
         //  Revert to defaults
         config_load_defaults();
 
