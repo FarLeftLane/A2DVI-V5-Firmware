@@ -137,7 +137,7 @@ void DELAYED_COPY_CODE(printXY)(uint32_t x, uint32_t line, const char* pMsg, TPr
 void DELAYED_COPY_CODE(clearTextScreen)(void)
 {
     // initialize the screen buffer area
-    for (uint32_t i=0;i<40*26/4;i++)
+    for (uint32_t i=0;i<1024/4;i++)
     {
 #ifndef FEATURE_TEST
         ((uint32_t*)text_p1)[i] = 0xA0A0A0A0; // initialize with blanks
