@@ -14,6 +14,7 @@ extern "C" {
 
 #define N_TMDS_LANES 3
 #define TMDS_SYNC_LANE 0 // blue!
+#define A2DVI_SCANLINES (480)		//	For 200 lines = (2*200 + 4*16)
 
 #include "pico/util/queue.h"
 

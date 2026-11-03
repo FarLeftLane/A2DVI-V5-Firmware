@@ -190,17 +190,19 @@ void DELAYED_COPY_CODE(update_debug_monitor)(void)
 
 void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lines)
 {
+    uint row_count;
+
+    row_count = (((A2DVI_SCANLINES / 2) - 192) / 2);                //  232-192=40/2=20
+    if (!in_192_lines)
+        row_count = (((A2DVI_SCANLINES / 2) - 200) / 2);            //  232-200=32/2=16
+    else if (IsVidexMode)
+        row_count = (((A2DVI_SCANLINES / 2) - 216) / 2);            //  232-216=16/2=8
+
     if (!IS_IFLAG(IFLAGS_DEBUG_LINES))
     {
+        //  Debug lines hidden
         if ((top)||(show_subtitle_cycles==0))
         {
-            // videx needs 216 lines/screen instead of 192 as usual, we can only render one status line above/below the screen area)
-            uint row_count = 16;
-            if (IsVidexMode)
-            {
-                row_count = (top) ? 0 : 8;
-            }
-
             for (uint row=0;row<row_count;row++)
             {
                 dvi_get_scanline(tmdsbuf);
@@ -217,11 +219,15 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
             return;
         }
     }
-    else
-    if (top)
+    else if (top)
     {
         update_debug_monitor();
     }
+
+    if (!IsVidexMode)
+        row_count = row_count - 16;     //  Render 2 text lines
+    else
+        row_count = row_count - 8;      //  Videx Render 1 text line
 
     if (top)
     {
@@ -230,42 +236,42 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
         uint8_t* line2 = &status_line[40];
         if (!IsVidexMode)
         {
+            //  Render 2 lines
             render_text40_line(line1, 0, 4);
             render_text40_line(line2, 0, 4);
         }
-
-        if (in_192_lines)
+        else
         {
-            for (uint row = 0; row < 4; row++)
+            //  Videx Render 1 line
+            render_text40_line(line1, 0, 4);
+        }
+
+        for (uint row = 0; row < row_count; row++)
+        {
+            dvi_get_scanline(tmdsbuf);
+            dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
+            for (uint32_t x=0;x<320;x++)
             {
-                dvi_get_scanline(tmdsbuf);
-                dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
-                for (uint32_t x=0;x<320;x++)
-                {
-                    *(tmdsbuf_red++)   = TMDS_SYMBOL_0_0;   //  TMDS_SYMBOL_0_0 TMDS_SYMBOL_255_255
-                    *(tmdsbuf_green++) = TMDS_SYMBOL_0_0;
-                    *(tmdsbuf_blue++)  = TMDS_SYMBOL_0_0;
-                }
-                dvi_send_scanline(tmdsbuf);
+                *(tmdsbuf_red++)   = TMDS_SYMBOL_0_0;
+                *(tmdsbuf_green++) = TMDS_SYMBOL_0_0;
+                *(tmdsbuf_blue++)  = TMDS_SYMBOL_0_0;
             }
+            dvi_send_scanline(tmdsbuf);
         }
     }
     else
     {
-        if (in_192_lines)
+        for (uint row = 0; row < row_count; row++)
         {
-            for (uint row = 0; row < 4; row++)
+            dvi_get_scanline(tmdsbuf);
+            dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
+            for (uint32_t x=0;x<320;x++)
             {
-                dvi_get_scanline(tmdsbuf);
-                dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
-                for (uint32_t x=0;x<320;x++)
-                {
-                    *(tmdsbuf_red++)   = TMDS_SYMBOL_0_0;   //  TMDS_SYMBOL_0_0 TMDS_SYMBOL_255_255
-                    *(tmdsbuf_green++) = TMDS_SYMBOL_0_0;
-                    *(tmdsbuf_blue++)  = TMDS_SYMBOL_0_0;
-                }
-                dvi_send_scanline(tmdsbuf);
+                *(tmdsbuf_red++)   = TMDS_SYMBOL_0_0;
+                *(tmdsbuf_green++) = TMDS_SYMBOL_0_0;
+                *(tmdsbuf_blue++)  = TMDS_SYMBOL_0_0;
             }
+            dvi_send_scanline(tmdsbuf);
         }
 
         // render two debug monitor lines below the screen area

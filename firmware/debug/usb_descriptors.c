@@ -23,8 +23,8 @@
  *
  */
 
-#if PICO_USB
-#warning PICO_USB FEATURE IS ENABLED! ************************************
+#if LIB_TINYUSB_DEVICE
+#warning DEBUG USB RESET FEATURE IS ENABLED! ************************************
 
 #include <stdbool.h>            //  For bool
 #include <pico/unique_id.h>

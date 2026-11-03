@@ -32,7 +32,7 @@ SOFTWARE.
 #include "config/config.h"
 #include "config/device_regs.h"
 #include "fonts/textfont.h"
-#if PICO_USB
+#if LIB_TINYUSB_DEVICE
 #include <tusb.h>
 #endif
 
@@ -764,7 +764,7 @@ void __time_critical_func(abus_loop)()
 
     while(1)
     {
-#if PICO_USB
+#if LIB_TINYUSB_DEVICE
         while (abus_pio_addr_is_empty())
         {
             //  Process USB task
@@ -774,7 +774,7 @@ void __time_critical_func(abus_loop)()
         //  Read the address
         value = abus_pio_addr_blocking_read();
 
-#if PICO_USB
+#if LIB_TINYUSB_DEVICE
         while (abus_pio_data_is_empty())
         {
             //  Process USB task

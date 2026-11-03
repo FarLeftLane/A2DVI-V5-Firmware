@@ -27,7 +27,7 @@ SOFTWARE.
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include "hardware/vreg.h"
-#if PICO_USB
+#if LIB_TINYUSB_DEVICE
 #include <tusb.h>
 #endif
 #include "hardware/structs/sysinfo.h"
@@ -87,7 +87,7 @@ int main()
     //  Check to make sure we are on the right processor for A2DVIV5
     assert_processor_type();
 
-#if PICO_USB
+#if LIB_TINYUSB_DEVICE
     //  Init tusb for reboot
     tusb_init();
 #endif
