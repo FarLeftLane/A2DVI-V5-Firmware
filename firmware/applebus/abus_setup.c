@@ -63,11 +63,19 @@ void abus_pio_setup(void)
     gpio_set_inover(M2SEL_PIN, GPIO_OVERRIDE_INVERT);
 #endif
 
+#if APPLEIIGS
+    //  Setup the addr SM for the IIgs
+    s_addr_sm.offset = pio_add_program(CONFIG_ABUS_ADDR_PIO, &abus_iigs_addr_program);
+    s_addr_sm.config = abus_iigs_addr_program_get_default_config(s_addr_sm.offset);
+    abus_iigs_addr_program_set_config(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM, &s_addr_sm.config);
+    pio_sm_claim(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM);
+#else
     //  Setup the addr SM
     s_addr_sm.offset = pio_add_program(CONFIG_ABUS_ADDR_PIO, &abus_addr_program);
     s_addr_sm.config = abus_addr_program_get_default_config(s_addr_sm.offset);
     abus_addr_program_set_config(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM, &s_addr_sm.config);
     pio_sm_claim(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM);
+#endif
 
     //  Setup the data write SM
     s_write_sm.offset = pio_add_program(CONFIG_ABUS_DATA_PIO, &abus_write_program);

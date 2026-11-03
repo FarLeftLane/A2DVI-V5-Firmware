@@ -270,8 +270,16 @@ void DELAYED_COPY_CODE(render_loop)()
         // copy soft switches - since we need consistent settings throughout a rendering cycle
         uint32_t current_softsw = soft_switches;
         bool IsVidex = ((current_softsw & (SOFTSW_TEXT_MODE|SOFTSW_VIDEX_80COL)) == (SOFTSW_TEXT_MODE|SOFTSW_VIDEX_80COL));
+
+        bool is_SHGR = false;
+
+#if APPLEIIGS
+        if (IS_IFLAG(IFLAGS_IIGS_REGS))
+            is_SHGR = ((current_softsw & SOFTSW_SHGR) != 0) ;
+#endif
+
 #ifndef FEATURE_TEST_TMDS
-        render_debug(IsVidex, true);
+        render_debug(IsVidex, true, (is_SHGR == false));
 
         // set flag when monochrome rendering is requested
         mono_rendering = (current_softsw & SOFTSW_MONOCHROME)||(internal_flags & IFLAGS_FORCED_MONO);
@@ -289,8 +297,16 @@ void DELAYED_COPY_CODE(render_loop)()
         }
         else
 #endif
+
         if (IsVidex)
+        {
             render_videx_text();
+        }
+        else if (is_SHGR)
+        {
+            render_shr_mem(&aux_memory[0x02000], 0, 200);
+            encode_shr_palette(&aux_memory[0x02000]);
+        }
         else
         {
             switch(current_softsw & SOFTSW_MODE_MASK)
@@ -350,7 +366,7 @@ void DELAYED_COPY_CODE(render_loop)()
             }
         }
 
-        render_debug(IsVidex, false);
+        render_debug(IsVidex, false, (is_SHGR == false));
 
         update_text_flasher();
 

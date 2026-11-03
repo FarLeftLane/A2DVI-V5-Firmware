@@ -77,7 +77,7 @@ char DELAYED_COPY_DATA(pStatus6502_1[]) = "BUS CYCLES :";
 char DELAYED_COPY_DATA(pStatus6502_2[]) = "ADDRESS BUS: ?";
 char DELAYED_COPY_DATA(pStatus6502_3[]) = "PC         : ?";
 char DELAYED_COPY_DATA(pStatus6502_4[]) = "NO 6502 BUS ACTIVITY";
-char DELAYED_COPY_DATA(pStatus6502_5[]) = "WAITING FOR APPLE II ROM RESET ROUTINE";
+char DELAYED_COPY_DATA(pStatus6502_5[]) = "WAITING FOR APPLE II ROM RESET";
 
 #define LINE_A2DVI     (2)
 #define LINE_A2DIGITAL (LINE_A2DVI+7)
@@ -183,7 +183,7 @@ void DELAYED_COPY_CODE(render_splash)()
 
     // render splash screen, show 6502 status
     uint32_t splash_frames = 0;
-    while ((bus_cycle_counter < 6*1000*1000)&&(IS_SOFTSWITCH(SOFTSW_SHOW_SPLASH))) // until splash screen disabled, or bus activity for >= 6 seconds
+    while ((bus_cycle_counter < 1*1000*1000)&&(IS_SOFTSWITCH(SOFTSW_SHOW_SPLASH))) // until splash screen disabled, or bus activity for >= 1 seconds
     {
         if ((frame_counter & 0x7)==2) // don't update text in the very first frame, since the PIOs expect the TMDS stream to begin *immediately*
         {
@@ -201,12 +201,12 @@ void DELAYED_COPY_CODE(render_splash)()
             }
         }
 
-        render_debug(false, true);
+        render_debug(false, true, true);
         for (uint line=0;line<24;line++)
         {
             render_color_text40_line(line);
         }
-        render_debug(false, false);
+        render_debug(false, false, true);
         update_text_flasher();
         splash_frames++;
 

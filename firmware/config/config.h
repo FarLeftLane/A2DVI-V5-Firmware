@@ -39,8 +39,8 @@ typedef enum
     MACHINE_AGAT9   = 5,
     MACHINE_BASIS   = 6,
     MACHINE_PRAVETZ = 7,
-    MACHINE_MAX_CFG = MACHINE_PRAVETZ, // valid maximum option for config, otherwise "AUTO" is assumed
-//  MACHINE_IIGS    = 8,             // currently not supported
+    MACHINE_IIGS    = 8,             // currently not supported
+    MACHINE_MAX_CFG = MACHINE_IIGS, // valid maximum option for config, otherwise "AUTO" is assumed
 //    MACHINE_INVALID = 0xfe
 } compat_t;
 

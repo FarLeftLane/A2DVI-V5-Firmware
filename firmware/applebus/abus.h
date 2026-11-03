@@ -36,11 +36,24 @@ void abus_clear_fifo(void);
 void abus_interface (uint32_t value);
 #endif
 
-#define ABUS_DATA_SIZE    (11)      //  This should match IN_DATA_SIZE
-#define ACCESS_WRITE(value)    ((value & (1u << (CONFIG_PIN_APPLEBUS_RW     - CONFIG_PIN_APPLEBUS_DATA_BASE))) == 0)
-#define ACCESS_READ(value)     ((value & (1u << (CONFIG_PIN_APPLEBUS_RW     - CONFIG_PIN_APPLEBUS_DATA_BASE))) != 0)
-#define CARD_SELECT(value)     ((value & (1u << (CONFIG_PIN_APPLEBUS_SELECT - CONFIG_PIN_APPLEBUS_DATA_BASE))) == 0)
-#define ADDRESS_BUS(value)               ((value >> ABUS_DATA_SIZE) & 0xffff)
-#define ADDRESS_BUS_HI_NIBBLE(value)     ((value >> (ABUS_DATA_SIZE + 12)) & 0xf)
-#define ADDRESS_BUS_HI_BYTE(value)       ((value >> (ABUS_DATA_SIZE + 8)) & 0xff)
-#define DATA_BUS(value)                  (value & 0xff)
+#define ABUS_DATA_SIZE                  (11)        //  This should match IN_DATA_SIZE
+#define ACCESS_WRITE(value)             ((value & (1u << (CONFIG_PIN_APPLEBUS_RW     - CONFIG_PIN_APPLEBUS_DATA_BASE))) == 0)
+#define ACCESS_READ(value)              ((value & (1u << (CONFIG_PIN_APPLEBUS_RW     - CONFIG_PIN_APPLEBUS_DATA_BASE))) != 0)
+#define CARD_SELECT(value)              ((value & (1u << (CONFIG_PIN_APPLEBUS_SELECT - CONFIG_PIN_APPLEBUS_DATA_BASE))) == 0)
+#define ABUS_ADDR_START                 (11)        //  This is where the bits are in the FIFO (not GPIOs)
+#define ADDRESS_BUS(value)              ((value >> ABUS_ADDR_START) & 0xffff)
+#define ADDRESS_BUS_HI_NIBBLE(value)    ((value >> (ABUS_ADDR_START + 12)) & 0xf)
+#define ADDRESS_BUS_HI_BYTE(value)      ((value >> (ABUS_ADDR_START + 8)) & 0xff)
+#define DATA_BUS(value)                 (value & 0xff)
+
+//  Applle IIgs
+#define ACCESS_M2B0(value)              ((value & (1u << (CONFIG_PIN_APPLEBUS_M2B0     - CONFIG_PIN_APPLEBUS_DATA_BASE))) != 0)
+
+//  FIFO layout
+//  33222222222211111111110000000000
+//  10987654321098765432109876543210
+//    /RMAAAAAAAAAAAAAAAA///DDDDDDDD
+//    M/2                IID76543210
+//    2WB                OOE
+//    S 0                SSV
+//    E                  TES

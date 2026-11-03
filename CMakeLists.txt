@@ -48,8 +48,11 @@ add_compile_options(-DDVI_N_TMDS_BUFFERS=8)
 
 add_compile_options(-DFW_VERSION="${FW_VERSION}")
 
-# Enable the debug counters
-# add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
+# Enable the debug counters FEATURE_DEBUG_COUNTER
+add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
+
+# Enable the IIgs support APPLEIIGS
+add_compile_options(-DAPPLEIIGS=1)
 
 # Add executable. Default name is the project name, version 0.1
 
@@ -70,6 +73,7 @@ add_executable(${PROJECT_NAME}
     firmware/render/render_debug.c
     firmware/render/render_text.c
     firmware/render/render_lores.c
+    firmware/render/render_shr.c
     firmware/render/render_dgr.c
     firmware/render/render_hires.c
     firmware/render/render_dhgr.c

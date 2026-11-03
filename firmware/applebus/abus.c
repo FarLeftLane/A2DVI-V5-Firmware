@@ -96,14 +96,14 @@ static inline void __time_critical_func(machine_auto_detection)(uint32_t address
                 detected_machine = MACHINE_PRAVETZ;
                 set_machine(MACHINE_PRAVETZ);
             }
-#if 0
             else
             if (Char2 == 0xC9) // 'I': "Apple IIgs"
             {
                 detected_machine = MACHINE_IIGS;
                 set_machine(MACHINE_IIGS);
+
+                soft_switches &= ~ SOFTSW_SHOW_SPLASH;      //  bus_func_fxxx_read doesn't trigger on the IIgs
             }
-#endif
         }
         else
         if (Char1 == 0xD8) // 'X'
@@ -325,33 +325,91 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
             }
         }
         break;
+
 #ifdef APPLEIIGS
+
+    //  Apple IIgs APPLEIIGS
     case 0x22:
         if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
         {
-            apple_tbcolor = DATA_BUS(value);
+            /*
+            • Name: TBCOLOR (Text/Background Color)
+            • Bit Layout / Nibbles:
+                • Low Nibble (Bits 3–0): Controls the background color (values 0 to 15).
+                • High Nibble (Bits 7–4): Controls the text color (values 0 to 15).
+            */
+
+            //  apple_tbcolor = DATA_BUS(value);    //  ???
         }
         break;
     case 0x29:
         if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
         {
-            soft_switches = (soft_switches & ~(SOFTSW_NEWVID_MASK << SOFTSW_NEWVID_SHIFT)) | ((data & SOFTSW_NEWVID_MASK) << SOFTSW_NEWVID_SHIFT);
+            //  NEWVIDEO Register
+            //  b7 - 1=SHR
+            //  b6 - 0=IIe 128K map, 1=linear address space ???
+            //  b5 - DHR Mono 0=Color, 1=B&W
+            //  b0 - Bank Latch? ???
+            uint_fast8_t data = DATA_BUS(value);
+
+            soft_switches = (soft_switches & ~(SOFTSW_NEWVID_MASK << SOFTSW_NEWVID_SHIFT)) | (((data) & SOFTSW_NEWVID_MASK) << SOFTSW_NEWVID_SHIFT);
         }
         break;
     case 0x34:
         if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
         {
-            apple_border = DATA_BUS(value);
+            /*
+            CLOCKCTL (Clock Control Register).
+            • b0–b3 (0–3): Sets the border color of the screen display.
+            • b5 (5): Stop bit / chip enable control for the internal clock interface.
+            • b6 (6): Read/Write select bit (1 = read mode, 0 = write mode).
+            • b7 (7): Start bit / data clock control.
+            */
+            // apple_border = DATA_BUS(value);      //  ???
         }
         break;
     case 0x35:
         if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
         {
+            /*  
+            Shadow Register (Is this register needed???)
+            • Bit 0: Inhibit / control Text page 1 shadowing ($0400–$07FF)
+            • Bit 1: Inhibit / control Hi-Res page 1 shadowing ($2000–$3FFF)
+            • Bit 2: Inhibit / control Hi-Res page 2 shadowing ($4000–$5FFF)
+            • Bit 3: Inhibit SHR shadowing
+            • Bit 4: Inhibit aux bank hi-res graphics bank
+            • Bit 5: Inhibit text page 2
+            • Bit 6: Controls I/O and language card 
+            • Bit 7: Reserved
+            */
             uint_fast8_t data = DATA_BUS(value);
-            soft_switches = (soft_switches & ~(SOFTSW_SHADOW_MASK << SOFTSW_SHADOW_SHIFT)) | ((data & SOFTSW_SHADOW_MASK) << SOFTSW_SHADOW_SHIFT);
+
+            s_soft_switches_2 = (s_soft_switches_2 & ~(SOFTSW2_SHADOW_MASK << SOFTSW2_SHADOW_SHIFT)) | ((data & SOFTSW2_SHADOW_MASK) << SOFTSW2_SHADOW_SHIFT);         //  ???  Not used?
         }
         break;
+
+    case 0x68:
+        if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
+        {
+            /*
+            ROM/RAM State Register
+            • Bit 0 (INTCXROM): Determines whether internal ROM or expansion slot card ROM is used in the $C100 to $C7FF memory block.
+            • Bit 1 (ROMBANK): Selects the ROM bank in main memory (0) or auxiliary memory (1).  (do not modify)
+            • Bit 2 (LCBNK2): Selects Language Card Bank 1 (1) or Bank 0 (0).
+            • Bit 3 (RDROM): Selects whether reading from $D000–$FFFF accesses ROM (1) or RAM (0).
+            • Bit 4 (RAMWRT): Selects whether writing to $D000–$FFFF writes to Language Card RAM (1) or main RAM (0).
+            • Bit 5 (RAMRD): Selects whether reading from $D000–$FFFF reads from Language Card RAM (1) or main RAM (0).
+            • Bit 6 (PAGE2): Selects (1) text page 2, (0) page 1
+            • Bit 7 (ALTZP): Selects the (1) main zero page and stack or (0) aux zero page and stack.
+            */
+            uint_fast8_t data = DATA_BUS(value);
+
+            soft_switches = (soft_switches & ~(SW_STATE_REG_MASK << SW_STATE_REG_SHIFT)) | ((data & SW_STATE_REG_MASK) << SW_STATE_REG_SHIFT);
+        }
+        break;
+
 #endif
+
     case 0x50: // TEXTOFF
         soft_switches &= ~SOFTSW_TEXT_MODE;
         break;
@@ -460,6 +518,57 @@ void __time_critical_func(bus_func_ignore)(uint32_t value)
     // do nothing for this address area
 }
 
+#if APPLEIIGS
+// Shadow screen area of the Apple's memory by observing the bus write cycles
+void __time_critical_func(bus_func_screen_write)(uint32_t value)
+{
+    uint32_t address = ADDRESS_BUS(value);
+
+    if ((address >= 0x400) && (address < MAX_ADDRESS))
+    {
+        uint_fast8_t data = DATA_BUS(value);
+
+        if (ACCESS_M2B0(value))
+        {
+            //  AUX
+            aux_memory[address] = data;
+        }
+        else
+        {
+            // Mirror Video Memory from MAIN & AUX banks
+            if ( (soft_switches & SOFTSW_80STORE) && ((/*(address >= 0x400) && */(address < 0x800)) ||
+                ((soft_switches & SOFTSW_HIRES_MODE) && (address >= 0x2000) && (address < 0x4000) ) ) )
+            {
+                // 80STORE is on AND address is within an active display page
+                if (soft_switches & SOFTSW_PAGE_2)
+                {
+                    if (!ramworks_active)
+                        aux_memory[address] = data;
+                }
+                else if (!IS_SOFTSWITCH(SOFTSW_MENU_ENABLE))
+                    apple_memory[address] = data;
+                // nothing else to do
+            }
+            else
+            {
+                if (soft_switches & SOFTSW_AUX_WRITE)
+                {
+                    if (!ramworks_active)
+                        aux_memory[address] = data;
+                }
+                else if (!IS_SOFTSWITCH(SOFTSW_MENU_ENABLE))
+                {
+                    apple_memory[address] = data;
+                    if (address < 0x800)
+                    {
+                        machine_auto_detection(address);
+                    }
+                }
+            }
+        }
+    }
+}
+#else
 // Shadow screen area of the Apple's memory by observing the bus write cycles
 void __time_critical_func(bus_func_screen_write)(uint32_t value)
 {
@@ -505,6 +614,7 @@ void __time_critical_func(bus_func_screen_write)(uint32_t value)
         }
     }
 }
+#endif
 
 void __time_critical_func(bus_func_cxxx_read)(uint32_t value)
 {
@@ -583,7 +693,7 @@ void __time_critical_func(bus_func_fxxx_read)(uint32_t value)
         ramworks_active = false;
         reset_counter++;
     }
-    if (address == APPLEII_ROM_HOME+1) // HOME, executed after the BELL, about 100ms after RESET
+    if (address == APPLEII_ROM_HOME+1) // HOME, executed after the BELL, about 100ms after RESET    //  ??? Need ssomething for IIgs
     {
         if (((uint16_t) last_read_address) == APPLEII_ROM_HOME)
             soft_switches &= ~ SOFTSW_SHOW_SPLASH;
@@ -619,10 +729,10 @@ a2busfunc bus_functions[16*2] =
     /*$3xxx WRITE*/ bus_func_screen_write,
     /*$4xxx WRITE*/ bus_func_screen_write,
     /*$5xxx WRITE*/ bus_func_screen_write,
-    /*$6xxx WRITE*/ bus_func_ignore,
-    /*$7xxx WRITE*/ bus_func_ignore,
-    /*$8xxx WRITE*/ bus_func_ignore,
-    /*$9xxx WRITE*/ bus_func_ignore,
+    /*$6xxx WRITE*/ bus_func_screen_write,
+    /*$7xxx WRITE*/ bus_func_screen_write,
+    /*$8xxx WRITE*/ bus_func_screen_write,
+    /*$9xxx WRITE*/ bus_func_screen_write,
     /*$Axxx WRITE*/ bus_func_ignore,
     /*$Bxxx WRITE*/ bus_func_ignore,
     /*$Cxxx WRITE*/ bus_func_cxxx_write,

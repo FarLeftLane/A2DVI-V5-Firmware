@@ -50,7 +50,7 @@ extern          uint32_t dbg_counter2;
 
 extern volatile uint8_t  cardslot;
 
-#define MAX_ADDRESS (0x6000)
+#define MAX_ADDRESS (0x0000A000)            //  ??? IIgs needs 0000-A000
 
 extern uint8_t apple_memory[MAX_ADDRESS];
 extern uint8_t aux_memory[MAX_ADDRESS];
@@ -82,6 +82,7 @@ extern volatile uint8_t *extdrom;
 #endif
 
 extern volatile uint32_t soft_switches;
+extern volatile uint32_t s_soft_switches_2;
 
 extern volatile uint32_t internal_flags;
 
@@ -92,7 +93,7 @@ extern volatile uint32_t internal_flags;
 #define SOFTSW_PAGE_2         0x00000008ul
 
 // Apple IIe/c/gs softswitches
-#define SOFTSW_INTCXROM       0x00000010ul
+#define SOFTSW_INTCXROM       0x00000010ul      //  Aligns with $C068 << SW_STATE_REGISTER_SHIFT
 //                            0x00000020ul
 //                            0x00000040ul
 //                            0x00000080ul
@@ -100,13 +101,13 @@ extern volatile uint32_t internal_flags;
 #define SOFTSW_AUX_READ       0x00000200ul
 #define SOFTSW_AUX_WRITE      0x00000400ul
 #define SOFTSW_AUXZP          0x00000800ul
+
 #define SOFTSW_SLOT3ROM       0x00001000ul
 #define SOFTSW_80COL          0x00002000ul
 #define SOFTSW_ALTCHAR        0x00004000ul
 #define SOFTSW_DGR            0x00008000ul
-#define SOFTSW_MONOCHROME     0x00010000ul
-//#define SOFTSW_LINEARIZE    0x00020000ul
-//#define SOFTSW_SHR          0x00040000ul
+#define SOFTSW_MONOCHROME     0x00010000ul      //  Aligns with $C029 << SOFTSW_NEWVID_SHIFT
+//#define SOFTSW_LINEARIZE    0x00020000ul      //  Aligns with $C029 << SOFTSW_NEWVID_SHIFT
 #define SOFTSW_IOUDIS         0x00080000ul
 // Video7-specific soft switches
 #define SOFTSW_V7_MODE0       0x00000000ul
@@ -119,8 +120,16 @@ extern volatile uint32_t internal_flags;
 #define SOFTSW_SHOW_SPLASH    0x01000000ul
 
 #ifdef APPLEIIGS
-#define SOFTSW_NEWVID_MASK    0xE0ul
+#define SOFTSW_NEWVID_MASK    0xE0ul            //  b7-5 of $C029 (0x00070000)
 #define SOFTSW_NEWVID_SHIFT   11
+#define SOFTSW_SHGR           0x00040000ul
+
+#define SW_STATE_REG_MASK     0x000000FFul      //  $C068
+#define SW_STATE_REG_SHIFT    4
+
+//  s_soft_switches_2
+#define SOFTSW2_SHADOW_MASK   0x0000007Ful      //  b6-0 map to $C035
+#define SOFTSW2_SHADOW_SHIFT  0
 #endif
 
 

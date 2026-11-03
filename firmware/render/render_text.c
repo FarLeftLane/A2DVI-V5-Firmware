@@ -54,9 +54,7 @@ void DELAYED_COPY_CODE(update_text_flasher)()
                 break;
             case MACHINE_IIE:
             case MACHINE_IIE_ENH:
-#ifdef MACHINE_IIGS
             case MACHINE_IIGS:
-#endif
                 // IIE used a fixed divisor based on a video counter inside the IOU,
                 // and the resulting flashing frequency depended on PAL vs NTSC.
                 if (IS_IFLAG(IFLAGS_PAL))

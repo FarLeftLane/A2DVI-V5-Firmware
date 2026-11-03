@@ -58,7 +58,10 @@ extern void render_mixed_dgr();
 
 extern void render_videx_text();
 
-extern void render_debug(bool IsVidexMode, bool top);
+extern void encode_shr_palette(uint8_t* in_line_mem);
+extern void render_shr_mem(uint8_t* in_line_mem, uint32_t in_start_line, uint32_t in_end_line);
+
+extern void render_debug(bool IsVidexMode, bool top, bool in_192_lines);
 extern void copy_str(uint8_t* dest, const char* pMsg);
 extern void int2hex(uint8_t* pStrBuf, uint32_t value, uint32_t digits);
 

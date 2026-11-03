@@ -23,7 +23,7 @@ static struct dvi_inst *dma_irq_privdata[2];
 static void dvi_dma0_irq();
 static void dvi_dma1_irq();
 
-#define A2DVI_SCANLINES (2*192 + 4*16)
+#define A2DVI_SCANLINES (2*200 + 4*16)
 
 void __dvi_func(dvi_init)(struct dvi_inst *inst, uint spinlock_tmds_queue, uint spinlock_colour_queue)
 {

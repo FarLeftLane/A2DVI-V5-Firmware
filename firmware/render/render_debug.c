@@ -61,29 +61,39 @@ void DELAYED_COPY_CODE(update_debug_monitor)(void)
             ((uint32_t*)status_line)[i] = 0xA0A0A0A0;
         }
 
-        // show graphics/text mode
-        switch(soft_switches & SOFTSW_MODE_MASK)
+#if APPLEIIGS
+        if ( (IS_IFLAG(IFLAGS_IIGS_REGS)) && ((soft_switches & SOFTSW_SHGR) != 0) )
         {
-            case 0:
-                copy_str(&line1[0], (IS_SOFTSWITCH(SOFTSW_DGR)) ? "DGR" : "GR");
-                break;
-            case SOFTSW_MIX_MODE:
-                copy_str(&line1[0], ((soft_switches & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR)) ? "DGR" : "DGR MIX");
-                break;
-            case SOFTSW_HIRES_MODE:
-                copy_str(&line1[0], (IS_SOFTSWITCH(SOFTSW_DGR)) ? "DHGR" : "HGR");
-                break;
-            case SOFTSW_HIRES_MODE|SOFTSW_MIX_MODE:
-                copy_str(&line1[0], ((soft_switches & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR)) ? "DHGR MIX" : "HGR");
-                break;
-            default:
-                copy_str(&line1[0], "TEXT");
-                break;
+            copy_str(&line1[0], "SHR");
+        }
+        else
+#endif
+        {
+            // show graphics/text mode
+            switch(soft_switches & SOFTSW_MODE_MASK)
+            {
+                case 0:
+                    copy_str(&line1[0], (IS_SOFTSWITCH(SOFTSW_DGR)) ? "DGR" : "GR");
+                    break;
+                case SOFTSW_MIX_MODE:
+                    copy_str(&line1[0], ((soft_switches & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR)) ? "DGR" : "DGR MIX");
+                    break;
+                case SOFTSW_HIRES_MODE:
+                    copy_str(&line1[0], (IS_SOFTSWITCH(SOFTSW_DGR)) ? "DHGR" : "HGR");
+                    break;
+                case SOFTSW_HIRES_MODE|SOFTSW_MIX_MODE:
+                    copy_str(&line1[0], ((soft_switches & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR)) ? "DHGR MIX" : "HGR");
+                    break;
+                default:
+                    copy_str(&line1[0], "TEXT");
+                    break;
+            }
         }
 
         // show state of other soft-switches
         copy_str(&line1[ 9], (IS_SOFTSWITCH(SOFTSW_80COL))  ? "80" : "40");
         copy_str(&line1[12], (IS_SOFTSWITCH(SOFTSW_PAGE_2)) ? "P2" : "P1");
+        copy_str(&line1[15], (IS_IFLAG(IFLAGS_IIGS_REGS)) ? "GS" : "II");
 
         if (IS_IFLAG(IFLAGS_TEST) && vblank_counter)
         {
@@ -174,7 +184,7 @@ void DELAYED_COPY_CODE(update_debug_monitor)(void)
     }
 }
 
-void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top)
+void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lines)
 {
     if (!IS_IFLAG(IFLAGS_DEBUG_LINES))
     {
@@ -186,6 +196,7 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top)
             {
                 row_count = (top) ? 0 : 8;
             }
+
             for (uint row=0;row<row_count;row++)
             {
                 dvi_get_scanline(tmdsbuf);
@@ -198,6 +209,7 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top)
                 }
                 dvi_send_scanline(tmdsbuf);
             }
+
             return;
         }
     }
@@ -217,9 +229,41 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top)
             render_text40_line(line1, 0, 4);
             render_text40_line(line2, 0, 4);
         }
+
+        if (in_192_lines)
+        {
+            for (uint row = 0; row < 4; row++)
+            {
+                dvi_get_scanline(tmdsbuf);
+                dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
+                for (uint32_t x=0;x<320;x++)
+                {
+                    *(tmdsbuf_red++)   = TMDS_SYMBOL_0_0;   //  TMDS_SYMBOL_0_0 TMDS_SYMBOL_255_255
+                    *(tmdsbuf_green++) = TMDS_SYMBOL_0_0;
+                    *(tmdsbuf_blue++)  = TMDS_SYMBOL_0_0;
+                }
+                dvi_send_scanline(tmdsbuf);
+            }
+        }
     }
     else
     {
+        if (in_192_lines)
+        {
+            for (uint row = 0; row < 4; row++)
+            {
+                dvi_get_scanline(tmdsbuf);
+                dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
+                for (uint32_t x=0;x<320;x++)
+                {
+                    *(tmdsbuf_red++)   = TMDS_SYMBOL_0_0;   //  TMDS_SYMBOL_0_0 TMDS_SYMBOL_255_255
+                    *(tmdsbuf_green++) = TMDS_SYMBOL_0_0;
+                    *(tmdsbuf_blue++)  = TMDS_SYMBOL_0_0;
+                }
+                dvi_send_scanline(tmdsbuf);
+            }
+        }
+
         // render two debug monitor lines below the screen area
         uint8_t* line1 = &status_line[80];
         uint8_t* line2 = &status_line[120];

@@ -55,7 +55,6 @@
 .pio_version 1                          // We need version 1 (not 0) for RP2350
 
 .define public  GPIO_RW             37  // Read / Write pin
-.define public  M2SEL_PIN           38  // M2SEL pin (inverted)
 .define public  M2B0_PIN            36  // M2B0 pin ???  Currently PB_EX1
 
 .define public  GPIO_IN_ADDR_BASE   20  // base of the A0-A15 range
@@ -70,6 +69,9 @@
 
 .define public  PHI0_PIN            39  // Phi0 Clock
 .define public  PHI0_PIN_OFFSET     (PHI0_PIN - GPIO_IN_ADDR_BASE)          // Phi0 Clock offset from addr base for input
+
+.define public  M2SEL_PIN           38  // M2SEL pin (inverted)
+.define public  M2SEL_PIN_OFFSET    (M2SEL_PIN - GPIO_IN_ADDR_BASE)          // M2SEL offset from addr base for input
 
 .define public  DEVSEL_PIN          8   // DEVSEL  (inverted) (Note that DEVSEL and IOSEL are reversed on Proto Board)
 .define public  IOSEL_PIN           9   // IOSEL   (inverted)
@@ -93,7 +95,7 @@
 
                                         // this is the Apple II video circuit part of the cycle
 
-    wait 1 pin PHI0_PIN_OFFSET [5]      // wait for Phi0 to go high and 5 cycles, don't wait for DEV/IO/Strobe to stablize (2 work on a GS at 250Mhz, 3 works on a IIe)
+    wait 1 pin PHI0_PIN_OFFSET [5]      // wait for Phi0 to go high and 5 cycles, don't wait for DEV/IO/Strobe to stablize
 
     in pins, IN_ADDR_SIZE               // Read the R/W, M2B0 and A0-A15 (18 bits)
     in NULL, IN_DATA_SIZE      [31]     // Pad the rest for data (11 bits)
@@ -112,6 +114,7 @@ static inline void abus_addr_program_set_config(PIO pio, uint sm, pio_sm_config 
 {
     // in_base:         GPIO_IN_ADDR_BASE
     sm_config_set_in_pins(c, GPIO_IN_ADDR_BASE);
+    sm_config_set_in_pin_count(c, PHI0_PIN_OFFSET + 1);
 
     //  Init the pins A0 through PHI0
     for (uint gpio = GPIO_IN_ADDR_BASE; gpio <= PHI0_PIN; gpio++) 
@@ -122,7 +125,7 @@ static inline void abus_addr_program_set_config(PIO pio, uint sm, pio_sm_config 
     }
 
     // Set to input
-    pio_sm_set_consecutive_pindirs(pio, sm, GPIO_IN_ADDR_BASE, PHI0_PIN_OFFSET, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, GPIO_IN_ADDR_BASE, PHI0_PIN_OFFSET + 1, false);
 
     // shift_right:     false
     // autopush:        true
@@ -134,6 +137,63 @@ static inline void abus_addr_program_set_config(PIO pio, uint sm, pio_sm_config 
 }
 
 %}
+
+
+; Apple IIgs versions
+; PIO0 Base 16
+
+.program abus_iigs_addr
+    wait 1 pin M2SEL_PIN_OFFSET [8]      // wait for M2SEL high (pin is an offset from GPIO_IN_ADDR_BASE)
+
+.wrap_target
+    in NULL, IN_ADDR_TOP_PAD    [10]     // Pad with zeros (3 bits)
+
+    wait 0 pin M2SEL_PIN_OFFSET          // wait for M2SEL to go low.  M2SEL can stay low for multiple clock cycles
+
+    in pins, IN_ADDR_SIZE                // Read the R/W, M2B0 and A0-A15 (18 bits)
+    in NULL, IN_DATA_SIZE                // Pad the rest for data (11 bits)
+
+    wait 1 pin PHI0_PIN_OFFSET  [31]     // wait for Phi0 to go high and then wait 94 cycles to read data and selects
+
+    nop                         [31]     // 
+
+    nop                         [30]     // 
+
+    irq prev IRQ_WRITE                   // set 'write' IRQ.  IRQ_WRITE is being waited on in PIO2 SM0 (program abus_write), so we signal prev (PIO0->PIO2)
+
+    wait 0 pin PHI0_PIN_OFFSET  [31]     // wait for PHI0 to go low and then delay at least 140 ns (38 cycles at 270Mhz)  currently 42 cycles
+.wrap
+
+% c-sdk {
+
+static inline void abus_iigs_addr_program_set_config(PIO pio, uint sm, pio_sm_config *c) 
+{
+    // in_base:         GPIO_IN_ADDR_BASE
+    sm_config_set_in_pins(c, GPIO_IN_ADDR_BASE);
+    sm_config_set_in_pin_count(c, PHI0_PIN_OFFSET + 1);
+
+    //  Init the pins A0 through PHI0
+    for (uint gpio = GPIO_IN_ADDR_BASE; gpio <= PHI0_PIN; gpio++) 
+    {
+        pio_gpio_init(pio, gpio);
+        gpio_disable_pulls(gpio);
+//        gpio_set_input_hysteresis_enabled(gpio, true);                 //  ??? Need to investigate if this is needed
+    }
+
+    // Set to input
+    pio_sm_set_consecutive_pindirs(pio, sm, GPIO_IN_ADDR_BASE, PHI0_PIN_OFFSET + 1, false);
+
+    // shift_right:     false
+    // autopush:        true
+    // push_threshold:  32      //  We use (IN_ADDR_PAD)) to zero out the other bits
+    sm_config_set_in_shift(c, false, true, 32);
+
+    // Join the RX fifo
+    sm_config_set_fifo_join(c, PIO_FIFO_JOIN_RX);
+}
+
+%}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

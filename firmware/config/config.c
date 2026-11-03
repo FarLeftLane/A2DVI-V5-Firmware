@@ -174,12 +174,10 @@ void __time_critical_func(set_machine)(compat_t machine)
             videx_enabled = false;
         #endif
             break;
-#ifdef MACHINE_IIGS
         case MACHINE_IIGS:
             internal_flags |=  IFLAGS_IIE_REGS | IFLAGS_IIGS_REGS;
             videx_enabled = false;
             break;
-#endif
         case MACHINE_AUTO:
         case MACHINE_AGAT7:
         case MACHINE_AGAT9:

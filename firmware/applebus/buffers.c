@@ -47,6 +47,9 @@ volatile uint32_t last_read_address;
 
 volatile uint32_t soft_switches  = SOFTSW_TEXT_MODE  | SOFTSW_V7_MODE3 | SOFTSW_SHOW_SPLASH;
 volatile uint32_t internal_flags = IFLAGS_INTERP_DGR | IFLAGS_INTERP_DHGR;
+#ifdef APPLEIIGS
+volatile uint32_t s_soft_switches_2 = 0;        //  ??? Init value?
+#endif
 
 volatile uint8_t  cardslot;
 
