@@ -45,3 +45,5 @@ SOFTWARE.
 #define abus_pio_data_blocking_read()    (pio_sm_get_blocking(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM))
 
 void abus_pio_setup(void);
+void abus_enable_gs(void);
+

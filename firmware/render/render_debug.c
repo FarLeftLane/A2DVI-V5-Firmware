@@ -61,13 +61,11 @@ void DELAYED_COPY_CODE(update_debug_monitor)(void)
             ((uint32_t*)status_line)[i] = 0xA0A0A0A0;
         }
 
-#if APPLEIIGS
         if ( (IS_IFLAG(IFLAGS_IIGS_REGS)) && ((soft_switches & SOFTSW_SHGR) != 0) )
         {
             copy_str(&line1[0], "SHR");
         }
         else
-#endif
         {
             // show graphics/text mode
             switch(soft_switches & SOFTSW_MODE_MASK)

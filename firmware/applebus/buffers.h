@@ -119,7 +119,7 @@ extern volatile uint32_t internal_flags;
 #define SOFTSW_MENU_ENABLE    0x00800000ul
 #define SOFTSW_SHOW_SPLASH    0x01000000ul
 
-#ifdef APPLEIIGS
+//  Apple IIgs
 #define SOFTSW_NEWVID_MASK    0xE0ul            //  b7-5 of $C029 (0x00070000)
 #define SOFTSW_NEWVID_SHIFT   11
 #define SOFTSW_SHGR           0x00040000ul
@@ -130,7 +130,6 @@ extern volatile uint32_t internal_flags;
 //  s_soft_switches_2
 #define SOFTSW2_SHADOW_MASK   0x0000007Ful      //  b6-0 map to $C035
 #define SOFTSW2_SHADOW_SHIFT  0
-#endif
 
 
 // internal config switches

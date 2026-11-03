@@ -326,8 +326,6 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
         }
         break;
 
-#ifdef APPLEIIGS
-
     //  Apple IIgs APPLEIIGS
     case 0x22:
         if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
@@ -407,8 +405,6 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
             soft_switches = (soft_switches & ~(SW_STATE_REG_MASK << SW_STATE_REG_SHIFT)) | ((data & SW_STATE_REG_MASK) << SW_STATE_REG_SHIFT);
         }
         break;
-
-#endif
 
     case 0x50: // TEXTOFF
         soft_switches &= ~SOFTSW_TEXT_MODE;
@@ -518,7 +514,6 @@ void __time_critical_func(bus_func_ignore)(uint32_t value)
     // do nothing for this address area
 }
 
-#if APPLEIIGS
 // Shadow screen area of the Apple's memory by observing the bus write cycles
 void __time_critical_func(bus_func_screen_write)(uint32_t value)
 {
@@ -568,53 +563,6 @@ void __time_critical_func(bus_func_screen_write)(uint32_t value)
         }
     }
 }
-#else
-// Shadow screen area of the Apple's memory by observing the bus write cycles
-void __time_critical_func(bus_func_screen_write)(uint32_t value)
-{
-    uint_fast16_t address = ADDRESS_BUS(value);
-    if ((address >= 0x400)&&(address < MAX_ADDRESS))
-    {
-        uint_fast8_t data = DATA_BUS(value);
-
-        // Mirror Video Memory from MAIN & AUX banks
-        if ((soft_switches & SOFTSW_80STORE)&&
-            ((/*(address >= 0x400) && */(address < 0x800))||
-             ((soft_switches & SOFTSW_HIRES_MODE) && (address >= 0x2000) && (address < 0x4000))
-            )
-           )
-        {
-            // 80STORE is on AND address is within an active display page
-            if(soft_switches & SOFTSW_PAGE_2)
-            {
-                if (!ramworks_active)
-                    aux_memory[address] = data;
-            }
-            else
-            if (!IS_SOFTSWITCH(SOFTSW_MENU_ENABLE))
-                apple_memory[address] = data;
-            // nothing else to do
-        }
-        else
-        {
-            if(soft_switches & SOFTSW_AUX_WRITE)
-            {
-                if (!ramworks_active)
-                    aux_memory[address] = data;
-            }
-            else
-            if (!IS_SOFTSWITCH(SOFTSW_MENU_ENABLE))
-            {
-                apple_memory[address] = data;
-                if (address < 0x800)
-                {
-                    machine_auto_detection(address);
-                }
-            }
-        }
-    }
-}
-#endif
 
 void __time_critical_func(bus_func_cxxx_read)(uint32_t value)
 {

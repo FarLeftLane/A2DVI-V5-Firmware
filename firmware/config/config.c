@@ -35,6 +35,7 @@ SOFTWARE.
 #include "util/dmacopy.h"
 #include "fonts/textfont.h"
 #include "videx/videx_vterm.h"
+#include "applebus/abus_setup.h"
 
 volatile compat_t  detected_machine = MACHINE_AUTO;
 volatile compat_t  cfg_machine = MACHINE_AUTO;
@@ -177,6 +178,8 @@ void __time_critical_func(set_machine)(compat_t machine)
         case MACHINE_IIGS:
             internal_flags |=  IFLAGS_IIE_REGS | IFLAGS_IIGS_REGS;
             videx_enabled = false;
+            //  Switch abus PIO to use IIgs signals
+            abus_enable_gs();
             break;
         case MACHINE_AUTO:
         case MACHINE_AGAT7:
@@ -211,14 +214,9 @@ void __time_critical_func(set_machine)(compat_t machine)
     if ((current_machine == MACHINE_AUTO)&&
         (machine != MACHINE_AUTO))
     {
-        static bool done = false;
-        if (!done)
-        {
-            done = true;
-            current_machine = machine;
-            // machine auto detection: also adjust font to machine type
-            check_machine_font();
-        }
+        current_machine = machine;
+        // machine auto detection: also adjust font to machine type
+        check_machine_font();
     }
     current_machine = machine;
 }

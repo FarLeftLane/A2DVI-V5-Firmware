@@ -113,7 +113,7 @@ int main()
     
     // load config settings
     config_load();
-
+    
     // Enable debug lines
 #ifdef FEATURE_DEBUG_COUNTER
     SET_IFLAG(1, IFLAGS_DEBUG_LINES);

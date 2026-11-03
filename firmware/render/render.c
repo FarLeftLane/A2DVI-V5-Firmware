@@ -273,10 +273,8 @@ void DELAYED_COPY_CODE(render_loop)()
 
         bool is_SHGR = false;
 
-#if APPLEIIGS
         if (IS_IFLAG(IFLAGS_IIGS_REGS))
             is_SHGR = ((current_softsw & SOFTSW_SHGR) != 0) ;
-#endif
 
 #ifndef FEATURE_TEST_TMDS
         render_debug(IsVidex, true, (is_SHGR == false));

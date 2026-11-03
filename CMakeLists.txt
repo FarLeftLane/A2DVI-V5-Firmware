@@ -51,9 +51,6 @@ add_compile_options(-DFW_VERSION="${FW_VERSION}")
 # Enable the debug counters FEATURE_DEBUG_COUNTER
 add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
 
-# Enable the IIgs support APPLEIIGS
-add_compile_options(-DAPPLEIIGS=1)
-
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(${PROJECT_NAME} 
