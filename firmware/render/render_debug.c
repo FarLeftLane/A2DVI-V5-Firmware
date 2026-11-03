@@ -28,6 +28,7 @@ SOFTWARE.
 #include "render.h"
 #include "menu/menu.h"
 #include "dvi/a2dvi.h"
+#include "applebus/abus_setup.h"
 
 uint32_t show_subtitle_cycles;
 
@@ -179,6 +180,11 @@ void DELAYED_COPY_CODE(update_debug_monitor)(void)
         int2hex(&line2[20], dbg_counter1, 8);
         int2hex(&line2[29], dbg_counter2, 8);
 #endif
+        if (abus_pio_addr_is_stall() == true)
+        {
+            //  Check to see if we have stalled the ADDR RX FIFO
+            copy_str(&line2[38], "X");
+        }
     }
 }
 

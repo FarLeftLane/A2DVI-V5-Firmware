@@ -32,6 +32,9 @@ SOFTWARE.
 #include "config/config.h"
 #include "config/device_regs.h"
 #include "fonts/textfont.h"
+#if PICO_USB
+#include <tusb.h>
+#endif
 
 #define VIDEX_ABUS
 #include "videx/videx_vterm.h"
@@ -761,8 +764,23 @@ void __time_critical_func(abus_loop)()
 
     while(1)
     {
+#if PICO_USB
+        while (abus_pio_addr_is_empty())
+        {
+            //  Process USB task
+            tud_task();
+        }
+#endif
         //  Read the address
         value = abus_pio_addr_blocking_read();
+
+#if PICO_USB
+        while (abus_pio_data_is_empty())
+        {
+            //  Process USB task
+            tud_task();
+        }
+#endif
 
         //  Then read the data and or it into the value
         value |= abus_pio_data_blocking_read();

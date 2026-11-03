@@ -84,6 +84,7 @@ add_executable(${PROJECT_NAME}
     firmware/menu/menu.c
 
     firmware/debug/debug.c
+    firmware/debug/usb_descriptors.c
     firmware/util/dmacopy.c
 
     firmware/fonts/textfont.c
@@ -137,6 +138,7 @@ target_link_libraries(${PROJECT_NAME}
     pico_runtime
     pico_multicore
     pico_util
+    pico_unique_id 
 
     hardware_flash
     hardware_vreg
@@ -147,6 +149,9 @@ target_link_libraries(${PROJECT_NAME}
     hardware_pwm
 
     pico_stdlib
+
+    # comment in tinyusb for usb reboot, don't use in production
+    tinyusb_device     
 )
 
 # Add the standard include files to the build

@@ -37,12 +37,17 @@ SOFTWARE.
 #define abus_pio_addr_fifo_level()       (pio_sm_get_rx_fifo_level(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
 #define abus_pio_addr_is_full()          (pio_sm_is_rx_fifo_full(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
 #define abus_pio_addr_is_empty()         (pio_sm_is_rx_fifo_empty(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
+static __always_inline bool abus_pio_addr_is_stall(void) {
+    return (CONFIG_ABUS_ADDR_PIO->fdebug & (1u << (PIO_FDEBUG_RXSTALL_LSB + ABUS_ADDR_SM))) != 0;
+}
 
 #define abus_pio_addr_read()             (pio_sm_get(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
 #define abus_pio_addr_blocking_read()    (pio_sm_get_blocking(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM))
 
 
+#define abus_pio_data_is_empty()         (pio_sm_is_rx_fifo_empty(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM))
 #define abus_pio_data_blocking_read()    (pio_sm_get_blocking(CONFIG_ABUS_DATA_PIO, ABUS_DATA_SM))
+
 
 void abus_pio_setup(void);
 void abus_enable_gs(void);

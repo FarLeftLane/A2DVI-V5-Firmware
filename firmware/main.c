@@ -27,7 +27,9 @@ SOFTWARE.
 #include <pico/stdlib.h>
 #include "pico/multicore.h"
 #include "hardware/vreg.h"
-// #include <tusb.h>
+#if PICO_USB
+#include <tusb.h>
+#endif
 #include "hardware/structs/sysinfo.h"
 #include <hardware/watchdog.h>
 #include "pico/bootrom.h"
@@ -84,6 +86,11 @@ int main()
 {
     //  Check to make sure we are on the right processor for A2DVIV5
     assert_processor_type();
+
+#if PICO_USB
+    //  Init tusb for reboot
+    tusb_init();
+#endif
 
     //  Hold the A2 in reset and setup other board HW
     board_init();
