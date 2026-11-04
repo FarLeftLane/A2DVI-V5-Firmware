@@ -28,7 +28,7 @@ SOFTWARE.
 
 // TMDS symbols for LORES RGB colors - using the "double pixel" trick
 // (each symbol covers two pixels and is encoded with a perfect 'bit balance').
-uint32_t __attribute__((section (".appledata."))) tmds_lorescolor[3*16];
+uint32_t tmds_lorescolor[3*16];
 
 // default: initial A2DVI color palette...
 // gray1 != gray2

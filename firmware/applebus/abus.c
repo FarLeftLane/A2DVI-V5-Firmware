@@ -32,6 +32,8 @@ SOFTWARE.
 #include "config/config.h"
 #include "config/device_regs.h"
 #include "fonts/textfont.h"
+#include "dvi/tmds.h"
+#include "render/render.h"
 #if LIB_TINYUSB_DEVICE
 #include <tusb.h>
 #endif
@@ -340,7 +342,6 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
                 • High Nibble (Bits 7–4): Controls the text color (values 0 to 15).
             */
 
-            //  apple_tbcolor = DATA_BUS(value);    //  ???
         }
         break;
     case 0x29:
@@ -366,7 +367,11 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
             • b6 (6): Read/Write select bit (1 = read mode, 0 = write mode).
             • b7 (7): Start bit / data clock control.
             */
-            // apple_border = DATA_BUS(value);      //  ???
+
+            uint_fast8_t color_index = (DATA_BUS(value) & 0x0F) * 3;        //  Index into tmds_lorescolor
+            s_border_color_r = tmds_lorescolor[color_index + 0];
+            s_border_color_g = tmds_lorescolor[color_index + 1];
+            s_border_color_b = tmds_lorescolor[color_index + 2];
         }
         break;
     case 0x35:

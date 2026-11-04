@@ -209,9 +209,9 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
                 dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
                 for (uint32_t x=0;x<320;x++)
                 {
-                    *(tmdsbuf_red++)   = s_border_color;
-                    *(tmdsbuf_green++) = s_border_color;
-                    *(tmdsbuf_blue++)  = s_border_color;
+                    *(tmdsbuf_red++)   = s_border_color_r;
+                    *(tmdsbuf_green++) = s_border_color_g;
+                    *(tmdsbuf_blue++)  = s_border_color_b;
                 }
                 dvi_send_scanline(tmdsbuf);
             }
@@ -252,9 +252,9 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
             dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
             for (uint32_t x=0;x<320;x++)
             {
-                *(tmdsbuf_red++)   = s_border_color;
-                *(tmdsbuf_green++) = s_border_color;
-                *(tmdsbuf_blue++)  = s_border_color;
+                *(tmdsbuf_red++)   = s_border_color_r;
+                *(tmdsbuf_green++) = s_border_color_g;
+                *(tmdsbuf_blue++)  = s_border_color_b;
             }
             dvi_send_scanline(tmdsbuf);
         }
@@ -267,9 +267,9 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
             dvi_scanline_rgb640(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
             for (uint32_t x=0;x<320;x++)
             {
-                *(tmdsbuf_red++)   = s_border_color;
-                *(tmdsbuf_green++) = s_border_color;
-                *(tmdsbuf_blue++)  = s_border_color;
+                *(tmdsbuf_red++)   = s_border_color_r;
+                *(tmdsbuf_green++) = s_border_color_g;
+                *(tmdsbuf_blue++)  = s_border_color_b;
             }
             dvi_send_scanline(tmdsbuf);
         }

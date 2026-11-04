@@ -71,16 +71,6 @@ extern volatile uint8_t *hgr_p4;
 /* Videx VideoTerm */
 extern volatile uint8_t *videx_page;
 
-#define apple_tbcolor  apple_memory[0xC022]
-#define apple_border   apple_memory[0xC034]
-
-#if 0
-extern volatile uint8_t *baseio;
-extern volatile uint8_t *slotio;
-extern volatile uint8_t *slotrom;
-extern volatile uint8_t *extdrom;
-#endif
-
 extern volatile uint32_t soft_switches;
 extern volatile uint32_t s_soft_switches_2;
 

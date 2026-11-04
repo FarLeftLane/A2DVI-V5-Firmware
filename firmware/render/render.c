@@ -37,7 +37,9 @@ uint32_t led_bus_cycle_counter;
 bool mono_rendering = false;
 bool color_support;
 
-uint32_t s_border_color = TMDS_SYMBOL_0_0;
+uint32_t s_border_color_r = TMDS_SYMBOL_0_0;
+uint32_t s_border_color_g = TMDS_SYMBOL_0_0;
+uint32_t s_border_color_b = TMDS_SYMBOL_0_0;
 
 void DELAYED_COPY_CODE(render_init)()
 {

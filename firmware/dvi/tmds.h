@@ -92,12 +92,12 @@ extern uint32_t dvi_xofs640;
         dvi_scanline_rgb(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue); \
         for (uint32_t i=0;i<DVI_APPLE2_XOFS_560;i++) \
         {\
-            *(tmdsbuf_red+(DVI_WORDS_PER_CHANNEL - DVI_APPLE2_XOFS_560))   = s_border_color; \
-            *(tmdsbuf_green+(DVI_WORDS_PER_CHANNEL - DVI_APPLE2_XOFS_560)) = s_border_color; \
-            *(tmdsbuf_blue+(DVI_WORDS_PER_CHANNEL - DVI_APPLE2_XOFS_560))  = s_border_color; \
-            *(tmdsbuf_red++)   = s_border_color; \
-            *(tmdsbuf_green++) = s_border_color; \
-            *(tmdsbuf_blue++)  = s_border_color; \
+            *(tmdsbuf_red+(DVI_WORDS_PER_CHANNEL - DVI_APPLE2_XOFS_560))   = s_border_color_r; \
+            *(tmdsbuf_green+(DVI_WORDS_PER_CHANNEL - DVI_APPLE2_XOFS_560)) = s_border_color_g; \
+            *(tmdsbuf_blue+(DVI_WORDS_PER_CHANNEL - DVI_APPLE2_XOFS_560))  = s_border_color_b; \
+            *(tmdsbuf_red++)   = s_border_color_r; \
+            *(tmdsbuf_green++) = s_border_color_g; \
+            *(tmdsbuf_blue++)  = s_border_color_b; \
         }
 
 #define dvi_copy_scanline(destbuf, srcbuf) \
