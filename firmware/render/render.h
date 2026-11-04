@@ -34,6 +34,10 @@ extern bool mono_rendering;
 
 extern bool color_support;  // flag indicating whether current display mode supports color
 
+extern uint32_t s_render_soft_switches;     //  Copies of the state so it doesn't change in the middle of a frame
+extern uint32_t s_render_internal_flags;
+extern bool s_render_language_switch;
+
 extern uint32_t s_border_color_r;
 extern uint32_t s_border_color_g;
 extern uint32_t s_border_color_b;
@@ -43,10 +47,11 @@ extern void render_splash();
 extern void render_loop();
 
 extern void update_text_flasher();
-extern void render_text();
+extern void render_text(uint32_t in_internal_flags, uint32_t in_soft_switches);
+
 extern void render_mixed_text();
 extern void render_text40_line(const uint8_t *page, unsigned int line, uint8_t color_mode);
-extern void render_color_text40_line(unsigned int line);
+extern void render_color_text40_line(unsigned int line, uint32_t in_soft_switches);
 
 extern void render_lores();
 extern void render_mixed_lores();

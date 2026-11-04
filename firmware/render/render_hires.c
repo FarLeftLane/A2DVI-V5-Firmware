@@ -29,7 +29,7 @@ SOFTWARE.
 #include "render.h"
 #include "hires_dot_patterns.h"
 
-#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 static inline uint hires_line_to_mem_offset(uint line)
 {

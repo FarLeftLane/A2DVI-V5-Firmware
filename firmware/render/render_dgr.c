@@ -28,7 +28,7 @@ SOFTWARE.
 #include "config/config.h"
 #include "render.h"
 
-#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 uint8_t DELAYED_COPY_DATA(dgr_dot_pattern)[32] = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -112,7 +112,7 @@ static void DELAYED_COPY_CODE(render_dgr_line)(bool p2, uint line)
         }
     }
     else
-    if(internal_flags & IFLAGS_INTERP_DGR)
+    if(s_render_internal_flags & IFLAGS_INTERP_DGR)
     {
         // based David's DGR renderer - with artifacts
         uint32_t color1 = 0, color2 = 0;

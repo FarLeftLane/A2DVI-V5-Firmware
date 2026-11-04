@@ -32,7 +32,7 @@ SOFTWARE.
 
 #include "render.h"
 
-#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 volatile uint_fast32_t text_flasher_mask = 0;
 static uint64_t next_flash_tick = 0;
@@ -66,21 +66,21 @@ void DELAYED_COPY_CODE(update_text_flasher)()
     }
 }
 
-static inline uint_fast8_t char_text_bits(uint_fast8_t ch, uint_fast8_t glyph_line)
+static inline uint_fast8_t char_text_bits(uint_fast8_t ch, uint_fast8_t glyph_line, uint32_t in_soft_switches, uint_fast32_t in_text_flasher_mask, bool in_language_switch)
 {
     uint_fast8_t bits, invert;
 
-    if((ch & 0x80) || (soft_switches & SOFTSW_ALTCHAR))
+    if((ch & 0x80) || (in_soft_switches & SOFTSW_ALTCHAR))
     {
         // normal / mousetext character
         invert = 0x00;
     } else {
         // flashing character or inverse character
-        invert = (ch & 0x40) ? text_flasher_mask : 0x7f;
+        invert = (ch & 0x40) ? in_text_flasher_mask : 0x7f;
         ch = (ch & 0x3f) | 0x80;
     }
 
-    uint_fast16_t LanguageOffset = (language_switch) ? 0x800 : 0x0;
+    uint_fast16_t LanguageOffset = (in_language_switch) ? 0x800 : 0x0;
     bits = character_rom[LanguageOffset | ((uint_fast16_t)ch << 3) | glyph_line];
 
     return (bits ^ invert) & 0x7f;
@@ -99,8 +99,8 @@ void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int lin
         {
             // Grab 14 pixels from the next two characters
             uint32_t bits;
-            bits  = char_text_bits(line_buf[col++], glyph_line);
-            bits |= char_text_bits(line_buf[col++], glyph_line) << 7;
+            bits  = char_text_bits(line_buf[col++], glyph_line, s_render_soft_switches, text_flasher_mask, s_render_language_switch);
+            bits |= char_text_bits(line_buf[col++], glyph_line, s_render_soft_switches, text_flasher_mask, s_render_language_switch) << 7;
 
             // Translate bits into a pair of pixels
             for(int i=0; i < 14; i++)
@@ -125,7 +125,7 @@ void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int lin
     *(tmdsbuf_blue++)  = *pTmds; \
 }
 
-void DELAYED_COPY_CODE(render_color_text40_line)(unsigned int line)
+void DELAYED_COPY_CODE(render_color_text40_line)(unsigned int line, uint32_t in_soft_switches)
 {
     const uint16_t xofs = ((line & 0x7) << 7) + (((line >> 3) & 0x3) * 40);
     const uint32_t *line_buf  = (const uint32_t *)(text_p1 + xofs);
@@ -146,7 +146,7 @@ void DELAYED_COPY_CODE(render_color_text40_line)(unsigned int line)
             for (uint c=0;c<4;c++)
             {
                 // Grab 7 pixels from the next character
-                uint32_t bits  = char_text_bits(chars&0xff, glyph_line);
+                uint32_t bits  = char_text_bits(chars&0xff, glyph_line, in_soft_switches, text_flasher_mask, s_render_language_switch);
                 chars >>= 8;
                 uint8_t foreground_color3 = ((colors >> 4) & 0xf)*3;
                 uint8_t background_color3 = ((colors     ) & 0xf)*3;
@@ -182,8 +182,8 @@ void DELAYED_COPY_CODE(render_text80_line)(const uint8_t *page_a, const uint8_t 
         {
             // Grab 14 pixels from the next two characters
             uint32_t bits;
-            bits  = char_text_bits(line_buf_a[col], glyph_line) << 7;
-            bits |= char_text_bits(line_buf_b[col], glyph_line);
+            bits  = char_text_bits(line_buf_a[col], glyph_line, s_render_soft_switches, text_flasher_mask, s_render_language_switch) << 7;
+            bits |= char_text_bits(line_buf_b[col], glyph_line, s_render_soft_switches, text_flasher_mask, s_render_language_switch);
             col++;
 
             // Translate each pair of bits into a pair of pixels
@@ -202,13 +202,13 @@ void DELAYED_COPY_CODE(render_text80_line)(const uint8_t *page_a, const uint8_t 
 
 void DELAYED_COPY_CODE(render_mixed_text)()
 {
-    if((internal_flags & IFLAGS_VIDEO7) && ((soft_switches & (SOFTSW_80STORE | SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80STORE | SOFTSW_DGR)))
+    if((s_render_internal_flags & IFLAGS_VIDEO7) && ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80STORE | SOFTSW_DGR)))
     {
         if (!mono_rendering)
         {
             for(uint line=20; line < 24; line++)
             {
-                render_color_text40_line(line);
+                render_color_text40_line(line, s_render_soft_switches);
             }
             return;
         }
@@ -220,7 +220,7 @@ void DELAYED_COPY_CODE(render_mixed_text)()
         const uint8_t *pageA = (const uint8_t *)(page2 ? text_p2 : text_p1);
         uint8_t cmode = (mono_rendering) ? color_mode : 0; /* white */
 
-        if(soft_switches & SOFTSW_80COL)
+        if(s_render_soft_switches & SOFTSW_80COL)
         {
             // 80 column mode rendering
             const uint8_t *pageB = (const uint8_t *)(page2 ? text_p4 : text_p3);
@@ -240,15 +240,15 @@ void DELAYED_COPY_CODE(render_mixed_text)()
     }
 }
 
-void DELAYED_COPY_CODE(render_text)()
+void DELAYED_COPY_CODE(render_text)(uint32_t in_internal_flags, uint32_t in_soft_switches)
 {
-    if((internal_flags & IFLAGS_VIDEO7) && ((soft_switches & (SOFTSW_80STORE | SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80STORE | SOFTSW_DGR)))
+    if((in_internal_flags & IFLAGS_VIDEO7) && ((in_soft_switches & (SOFTSW_80STORE | SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80STORE | SOFTSW_DGR)))
     {
         if (!mono_rendering)
         {
             for(uint line=0; line < 24; line++)
             {
-                render_color_text40_line(line);
+                render_color_text40_line(line, in_soft_switches);
             }
             return;
         }
@@ -263,7 +263,7 @@ void DELAYED_COPY_CODE(render_text)()
         const bool page2 = PAGE2SEL;
         const uint8_t *pageA = (const uint8_t *)(page2 ? text_p2 : text_p1);
 
-        if(soft_switches & SOFTSW_80COL)
+        if(in_soft_switches & SOFTSW_80COL)
         {
             // 80 column mode rendering
             const uint8_t *pageB = (const uint8_t *)(page2 ? text_p4 : text_p3);

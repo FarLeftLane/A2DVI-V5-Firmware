@@ -37,7 +37,7 @@ uint8_t DELAYED_COPY_DATA(tmds_dhgr_lores_mapping)[16] =
     9*3 /*9:HVIOLET*/, 11*3 /*11:LBLUE*/, 13*3 /*13:PINK*/,    15*3 /*15:WHITE*/
 };
 
-#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 // add pixels to TMDS line
 #define ADD_TMDS_LORES_PIXELS(tmds_red, tmds_green, tmds_blue, color_index, count) \
@@ -108,7 +108,7 @@ static void DELAYED_COPY_CODE(render_dhgr_line)(bool p2, uint line, bool mono)
         }
     }
     else
-    if(IS_IFLAG(IFLAGS_VIDEO7) && ((soft_switches & (SOFTSW_80STORE | SOFTSW_80COL)) == SOFTSW_80STORE))
+    if(IS_IFLAG(IFLAGS_VIDEO7) && ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_80COL)) == SOFTSW_80STORE))
     {
         dvi_scanline_rgb560(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
 
@@ -159,7 +159,7 @@ static void DELAYED_COPY_CODE(render_dhgr_line)(bool p2, uint line, bool mono)
         }
     }
     else
-    if(IS_IFLAG(IFLAGS_VIDEO7) && ((soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE2))
+    if(IS_IFLAG(IFLAGS_VIDEO7) && ((s_render_soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE2))
     {
         uint8_t color;
 
@@ -193,7 +193,7 @@ static void DELAYED_COPY_CODE(render_dhgr_line)(bool p2, uint line, bool mono)
         }
     }
     else
-    if(IS_IFLAG(IFLAGS_VIDEO7) && ((soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE1))
+    if(IS_IFLAG(IFLAGS_VIDEO7) && ((s_render_soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE1))
     {
         dvi_scanline_rgb560(tmdsbuf, tmdsbuf_red, tmdsbuf_green, tmdsbuf_blue);
 
@@ -252,7 +252,7 @@ static void DELAYED_COPY_CODE(render_dhgr_line)(bool p2, uint line, bool mono)
     }
 #if 0
     else
-    if((internal_flags & (IFLAGS_INTERP | IFLAGS_GRILL)) == (IFLAGS_INTERP | IFLAGS_GRILL))
+    if((s_render_internal_flags & (IFLAGS_INTERP | IFLAGS_GRILL)) == (IFLAGS_INTERP | IFLAGS_GRILL))
     {
         // Preload black into the sliding window
         dots = 0;
@@ -392,7 +392,7 @@ static void DELAYED_COPY_CODE(render_dhgr_line)(bool p2, uint line, bool mono)
 void DELAYED_COPY_CODE(render_dhgr)()
 {
     bool mono = mono_rendering;
-    if(IS_IFLAG(IFLAGS_VIDEO7) && ((soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE0))
+    if(IS_IFLAG(IFLAGS_VIDEO7) && ((s_render_soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE0))
     {
         mono = true;
     }
@@ -405,7 +405,7 @@ void DELAYED_COPY_CODE(render_dhgr)()
 void DELAYED_COPY_CODE(render_mixed_dhgr)()
 {
     bool mono = mono_rendering;
-    if(IS_IFLAG(IFLAGS_VIDEO7) && ((soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE0))
+    if(IS_IFLAG(IFLAGS_VIDEO7) && ((s_render_soft_switches & SOFTSW_V7_MODE3) == SOFTSW_V7_MODE0))
     {
         mono = true;
     }

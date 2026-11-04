@@ -51,7 +51,7 @@ uint16_t DELAYED_COPY_DATA(lores_dot_pattern)[16] =
 
 static void render_lores_line(bool p2, uint line);
 
-#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 void DELAYED_COPY_CODE(render_lores)()
 {

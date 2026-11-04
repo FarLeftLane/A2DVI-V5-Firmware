@@ -37,6 +37,10 @@ uint32_t led_bus_cycle_counter;
 bool mono_rendering = false;
 bool color_support;
 
+uint32_t s_render_soft_switches = 0;
+uint32_t s_render_internal_flags = 0;
+bool s_render_language_switch = false;
+
 uint32_t s_border_color_r = TMDS_SYMBOL_0_0;
 uint32_t s_border_color_g = TMDS_SYMBOL_0_0;
 uint32_t s_border_color_b = TMDS_SYMBOL_0_0;
@@ -264,6 +268,7 @@ static void update_led()
     }
 }
 
+
 void DELAYED_COPY_CODE(render_loop)()
 {
     // show splash/diagnostic screen
@@ -272,22 +277,25 @@ void DELAYED_COPY_CODE(render_loop)()
     for(;;)
     {
         // copy soft switches - since we need consistent settings throughout a rendering cycle
-        uint32_t current_softsw = soft_switches;
-        bool IsVidex = ((current_softsw & (SOFTSW_TEXT_MODE|SOFTSW_VIDEX_80COL)) == (SOFTSW_TEXT_MODE|SOFTSW_VIDEX_80COL));
+        s_render_soft_switches = soft_switches;
+        s_render_internal_flags = internal_flags;
+        s_render_language_switch = language_switch;
+
+        bool IsVidex = ((s_render_soft_switches & (SOFTSW_TEXT_MODE|SOFTSW_VIDEX_80COL)) == (SOFTSW_TEXT_MODE|SOFTSW_VIDEX_80COL));
 
         bool is_SHGR = false;
 
         if (IS_IFLAG(IFLAGS_IIGS_REGS))
-            is_SHGR = ((current_softsw & SOFTSW_SHGR) != 0) ;
+            is_SHGR = ((s_render_soft_switches & SOFTSW_SHGR) != 0) ;
 
 #ifndef FEATURE_TEST_TMDS
         render_debug(IsVidex, true, (is_SHGR == false));
 
         // set flag when monochrome rendering is requested
-        mono_rendering = (current_softsw & SOFTSW_MONOCHROME)||(internal_flags & IFLAGS_FORCED_MONO);
+        mono_rendering = (s_render_soft_switches & SOFTSW_MONOCHROME)||(s_render_internal_flags & IFLAGS_FORCED_MONO);
 
         // prepare state indicating whether the current display mode supports colors
-        color_support = (current_softsw & SOFTSW_MONOCHROME) ? false : true;
+        color_support = (s_render_soft_switches & SOFTSW_MONOCHROME) ? false : true;
 #else
         // no scanlines/no videx when running the TMDS test
         cfg_scanline_mode = ScanlinesOff;
@@ -311,10 +319,10 @@ void DELAYED_COPY_CODE(render_loop)()
         }
         else
         {
-            switch(current_softsw & SOFTSW_MODE_MASK)
+            switch(s_render_soft_switches & SOFTSW_MODE_MASK)
             {
                 case 0:
-                    if(current_softsw & SOFTSW_DGR)
+                    if(s_render_soft_switches & SOFTSW_DGR)
                     {
                         render_dgr();
                     }
@@ -324,7 +332,7 @@ void DELAYED_COPY_CODE(render_loop)()
                     }
                     break;
                 case SOFTSW_MIX_MODE: //2
-                    if((current_softsw & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR))
+                    if((s_render_soft_switches & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR))
                     {
                         render_mixed_dgr();
                     }
@@ -334,7 +342,7 @@ void DELAYED_COPY_CODE(render_loop)()
                     }
                     break;
                 case SOFTSW_HIRES_MODE: //4
-                    if(current_softsw & SOFTSW_DGR)
+                    if(s_render_soft_switches & SOFTSW_DGR)
                     {
                         render_dhgr();
                     }
@@ -344,7 +352,7 @@ void DELAYED_COPY_CODE(render_loop)()
                     }
                     break;
                 case SOFTSW_HIRES_MODE|SOFTSW_MIX_MODE: //6
-                    if((current_softsw & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR))
+                    if((s_render_soft_switches & (SOFTSW_80COL | SOFTSW_DGR)) == (SOFTSW_80COL | SOFTSW_DGR))
                     {
                         render_mixed_dhgr();
                     }
@@ -354,7 +362,8 @@ void DELAYED_COPY_CODE(render_loop)()
                     }
                     break;
                 default:
-                    render_text();
+                    render_text(s_render_internal_flags, s_render_soft_switches);
+                    
                     if (reload_charsets)
                     {
                         config_load_charsets();

@@ -201,10 +201,14 @@ void DELAYED_COPY_CODE(render_splash)()
             }
         }
 
+        s_render_soft_switches = soft_switches;
+        s_render_internal_flags = internal_flags;
+        s_render_language_switch = language_switch;
+
         render_debug(false, true, true);
         for (uint line=0;line<24;line++)
         {
-            render_color_text40_line(line);
+            render_color_text40_line(line, s_render_soft_switches);
         }
         render_debug(false, false, true);
         update_text_flasher();
