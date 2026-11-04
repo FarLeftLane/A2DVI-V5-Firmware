@@ -147,6 +147,7 @@ static void render_videx_text_line(unsigned int line, uint16_t text_base_addr, u
     }
 }
 
+#if 0
 void DELAYED_COPY_CODE(render_skip_lines)(uint row_count)
 {
     for (uint row=0;row<row_count;row++)
@@ -162,6 +163,7 @@ void DELAYED_COPY_CODE(render_skip_lines)(uint row_count)
         dvi_send_scanline(tmdsbuf);
     }
 }
+#endif
 
 // Render a screen of VideoTerm text mode
 //

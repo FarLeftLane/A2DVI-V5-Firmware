@@ -34,6 +34,8 @@ extern bool mono_rendering;
 
 extern bool color_support;  // flag indicating whether current display mode supports color
 
+extern uint32_t s_border_color;
+
 extern void render_init();
 extern void render_splash();
 extern void render_loop();
