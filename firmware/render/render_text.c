@@ -86,9 +86,28 @@ static inline uint_fast8_t char_text_bits(uint_fast8_t ch, uint_fast8_t glyph_li
     return (bits ^ invert) & 0x7f;
 }
 
-void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int line, uint8_t color_mode)
+uint32_t* s_foreground_color = &tmds_mono_double_pixel[0];      //  White
+uint32_t* s_background_color = &tmds_mono_double_pixel[3*3];    //  Black
+
+uint32_t s_gs_fg_index = 0x000F * 3;     //  White
+uint32_t s_gs_bg_index = 0;              //  Block
+
+void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int line, uint8_t color_mode, bool gs_mode)
 {
     const uint8_t *line_buf = (const uint8_t *)(page + ((line & 0x7) << 7) + (((line >> 3) & 0x3) * 40));
+
+    if (gs_mode)
+    {
+        //  Setup the fg amd bg colors for the IIgs
+        s_foreground_color = &tmds_lorescolor[s_gs_fg_index];
+        s_background_color = &tmds_lorescolor[s_gs_bg_index];
+    }
+    else
+    {
+        //  Setup the fg amd bg colors
+        s_foreground_color = &tmds_mono_double_pixel[color_mode*3];
+        s_background_color = &tmds_mono_double_pixel[3*3];
+    }
 
     for(uint glyph_line=0; glyph_line < 8; glyph_line++)
     {
@@ -105,12 +124,16 @@ void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int lin
             // Translate bits into a pair of pixels
             for(int i=0; i < 14; i++)
             {
-                uint8_t color_offset = color_mode*3;
+                uint32_t* tmds_double_pixel;
+
                 if ((bits & 1)==0)
-                    color_offset = 3*3;
-                *(tmdsbuf_blue++)  = tmds_mono_double_pixel[color_offset + 2];
-                *(tmdsbuf_green++) = tmds_mono_double_pixel[color_offset + 1];
-                *(tmdsbuf_red++)   = tmds_mono_double_pixel[color_offset + 0];
+                    tmds_double_pixel = s_background_color;
+                else
+                    tmds_double_pixel = s_foreground_color;
+                
+                *(tmdsbuf_red++)   = tmds_double_pixel[0];
+                *(tmdsbuf_green++) = tmds_double_pixel[1];
+                *(tmdsbuf_blue++)  = tmds_double_pixel[2];
                 bits >>= 1;
             }
         }
@@ -234,7 +257,7 @@ void DELAYED_COPY_CODE(render_mixed_text)()
             // 40 column mode rendering
             for(uint line=20; line < 24; line++)
             {
-                render_text40_line(pageA, line, cmode);
+                render_text40_line(pageA, line, cmode, ((IS_IFLAG(IFLAGS_IIGS_REGS)) && (mono_rendering == false)));
             }
         }
     }
@@ -277,7 +300,7 @@ void DELAYED_COPY_CODE(render_text)(uint32_t in_internal_flags, uint32_t in_soft
             // 40 column mode rendering
             for(uint line=0; line < 24; line++)
             {
-                render_text40_line(pageA, line, color_mode);
+                render_text40_line(pageA, line, color_mode, ((IS_IFLAG(IFLAGS_IIGS_REGS)) && (mono_rendering == false)));
             }
         }
     }

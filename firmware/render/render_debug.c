@@ -237,13 +237,13 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
         if (!IsVidexMode)
         {
             //  Render 2 lines
-            render_text40_line(line1, 0, 4);
-            render_text40_line(line2, 0, 4);
+            render_text40_line(line1, 0, 4, false);
+            render_text40_line(line2, 0, 4, false);
         }
         else
         {
             //  Videx Render 1 line
-            render_text40_line(line1, 0, 4);
+            render_text40_line(line1, 0, 4, false);
         }
 
         for (uint row = 0; row < row_count; row++)
@@ -278,8 +278,8 @@ void DELAYED_COPY_CODE(render_debug)(bool IsVidexMode, bool top, bool in_192_lin
         uint8_t* line1 = &status_line[80];
         uint8_t* line2 = &status_line[120];
         if (!IsVidexMode)
-            render_text40_line(line1, 0, 4);
-        render_text40_line(line2, 0, 4);
+            render_text40_line(line1, 0, 4, false);
+        render_text40_line(line2, 0, 4, false);
 
         if (show_subtitle_cycles)
             show_subtitle_cycles--;

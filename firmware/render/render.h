@@ -42,6 +42,9 @@ extern uint32_t s_border_color_r;
 extern uint32_t s_border_color_g;
 extern uint32_t s_border_color_b;
 
+extern uint32_t s_gs_fg_index;
+extern uint32_t s_gs_bg_index;
+
 extern void render_init();
 extern void render_splash();
 extern void render_loop();
@@ -50,7 +53,7 @@ extern void update_text_flasher();
 extern void render_text(uint32_t in_internal_flags, uint32_t in_soft_switches);
 
 extern void render_mixed_text();
-extern void render_text40_line(const uint8_t *page, unsigned int line, uint8_t color_mode);
+extern void render_text40_line(const uint8_t *page, unsigned int line, uint8_t color_mode, bool gs_mode);
 extern void render_color_text40_line(unsigned int line, uint32_t in_soft_switches);
 
 extern void render_lores();

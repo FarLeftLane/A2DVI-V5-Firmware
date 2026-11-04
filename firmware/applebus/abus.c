@@ -333,7 +333,7 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
 
     //  Apple IIgs APPLEIIGS
     case 0x22:
-        if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
+        // We always proocess these
         {
             /*
             • Name: TBCOLOR (Text/Background Color)
@@ -341,7 +341,10 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
                 • Low Nibble (Bits 3–0): Controls the background color (values 0 to 15).
                 • High Nibble (Bits 7–4): Controls the text color (values 0 to 15).
             */
+            uint_fast8_t data = DATA_BUS(value);
 
+            s_gs_fg_index = (data >> 4) * 3;
+            s_gs_bg_index = (data & 0x0F) * 3;
         }
         break;
     case 0x29:
@@ -358,7 +361,7 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
         }
         break;
     case 0x34:
-        if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
+        if (IS_IFLAG(IFLAGS_IIGS_REGS))
         {
             /*
             CLOCKCTL (Clock Control Register).
