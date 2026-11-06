@@ -4,6 +4,7 @@ MIT License
 Copyright (c) 2021 Mark Aikens
 Copyright (c) 2023 David Kuder
 Copyright (c) 2024 Thorsten Brehm
+Copyright (c) 2026 Michael Neil
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -92,7 +93,7 @@ uint32_t* s_background_color = &tmds_mono_double_pixel[3*3];    //  Black
 uint32_t s_gs_fg_index = 0x000F * 3;     //  White
 uint32_t s_gs_bg_index = 0;              //  Block
 
-void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int line, uint8_t color_mode, bool gs_mode)
+void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int line, uint8_t in_color_mode, bool gs_mode)
 {
     const uint8_t *line_buf = (const uint8_t *)(page + ((line & 0x7) << 7) + (((line >> 3) & 0x3) * 40));
 
@@ -105,7 +106,7 @@ void DELAYED_COPY_CODE(render_text40_line)(const uint8_t *page, unsigned int lin
     else
     {
         //  Setup the fg amd bg colors
-        s_foreground_color = &tmds_mono_double_pixel[color_mode*3];
+        s_foreground_color = &tmds_mono_double_pixel[in_color_mode*3];
         s_background_color = &tmds_mono_double_pixel[3*3];
     }
 
@@ -188,13 +189,21 @@ void DELAYED_COPY_CODE(render_color_text40_line)(unsigned int line, uint32_t in_
     }
 }
 
-void DELAYED_COPY_CODE(render_text80_line)(const uint8_t *page_a, const uint8_t *page_b, unsigned int line, uint8_t color_mode)
+void DELAYED_COPY_CODE(render_text80_line)(const uint8_t *page_a, const uint8_t *page_b, unsigned int line, uint8_t in_color_mode, bool gs_mode)
 {
     uint line_offset = ((line & 0x7) << 7) + (((line >> 3) & 0x3) * 40);
     const uint8_t *line_buf_a = (const uint8_t *) (page_a + line_offset);
     const uint8_t *line_buf_b = (const uint8_t *) (page_b + line_offset);
 
-    uint8_t color_offset = color_mode*12;
+    uint8_t color_offset = in_color_mode*12;    //  For non-GS
+
+    uint32_t* tmds_double_pixel = tmds_lores_single_pixel;
+
+    if (gs_mode)
+    {
+        //  Base = ((((bg * 16) + fg) * 4) * 3) + (cfg_color_style * (3*16*16*4))
+        tmds_double_pixel = &tmds_lores_single_pixel[(((s_gs_bg_index * (16 * 4)) + (s_gs_fg_index * 4))) + (cfg_color_style * (3*16*16*4))];
+    }
 
     for(uint glyph_line=0; glyph_line < 8; glyph_line++)
     {
@@ -209,14 +218,29 @@ void DELAYED_COPY_CODE(render_text80_line)(const uint8_t *page_a, const uint8_t 
             bits |= char_text_bits(line_buf_b[col], glyph_line, s_render_soft_switches, text_flasher_mask, s_render_language_switch);
             col++;
 
-            // Translate each pair of bits into a pair of pixels
-            for(int i=0; i < 7; i++)
+            if (gs_mode)
             {
-                char symbol = (bits&3) + color_offset;
-                *(tmdsbuf_blue++)  = tmds_mono_pixel_pair[symbol+8];
-                *(tmdsbuf_green++) = tmds_mono_pixel_pair[symbol+4];
-                *(tmdsbuf_red++)   = tmds_mono_pixel_pair[symbol+0];
-                bits >>= 2;
+                // Translate each pair of bits into a pair of single pixels
+                for(int i=0; i < 7; i++)
+                {
+                    uint32_t symbol = (bits & 3) * 3;
+                    *(tmdsbuf_red++)   = tmds_double_pixel[symbol+0];
+                    *(tmdsbuf_green++) = tmds_double_pixel[symbol+1];
+                    *(tmdsbuf_blue++)  = tmds_double_pixel[symbol+2];
+                    bits >>= 2;
+                }
+            }
+            else
+            {
+                // Translate each pair of bits into a pair of double pixels
+                for(int i=0; i < 7; i++)
+                {
+                    char symbol = (bits&3) + color_offset;
+                    *(tmdsbuf_blue++)  = tmds_mono_pixel_pair[symbol+8];
+                    *(tmdsbuf_green++) = tmds_mono_pixel_pair[symbol+4];
+                    *(tmdsbuf_red++)   = tmds_mono_pixel_pair[symbol+0];
+                    bits >>= 2;
+                }
             }
         }
         dvi_send_scanline(tmdsbuf);
@@ -249,7 +273,7 @@ void DELAYED_COPY_CODE(render_mixed_text)()
             const uint8_t *pageB = (const uint8_t *)(page2 ? text_p4 : text_p3);
             for(uint line=20; line < 24; line++)
             {
-                render_text80_line(pageA, pageB, line, cmode);
+                render_text80_line(pageA, pageB, line, cmode, ((IS_IFLAG(IFLAGS_IIGS_REGS)) && (mono_rendering == false)));
             }
         }
         else
@@ -292,7 +316,7 @@ void DELAYED_COPY_CODE(render_text)(uint32_t in_internal_flags, uint32_t in_soft
             const uint8_t *pageB = (const uint8_t *)(page2 ? text_p4 : text_p3);
             for(uint line=0; line < 24; line++)
             {
-                render_text80_line(pageA, pageB, line, color_mode);
+                render_text80_line(pageA, pageB, line, color_mode, ((IS_IFLAG(IFLAGS_IIGS_REGS)) && (mono_rendering == false)));
             }
         }
         else
