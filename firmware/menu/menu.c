@@ -168,7 +168,7 @@ void DELAYED_COPY_CODE(clearLine)(uint8_t line, TPrintMode PrintMode)
 }
 
 char DELAYED_COPY_DATA(TitleFirmware)[] =
-    "A2DVI-V5 - FIRMWARE V" FW_VERSION;
+    "A2DVI-V5 - FIRMWARE " __DATE__;         //  "A2DVI-V5 - FIRMWARE V" FW_VERSION;
 
 char DELAYED_COPY_DATA(TitleCopyright)[] =
     "(C) 2026 MIKE NEIL, RALLE PALAVEEV ";

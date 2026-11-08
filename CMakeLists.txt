@@ -33,9 +33,9 @@ set(PICO_BOARD_HEADER_DIRS "${CMAKE_CURRENT_LIST_DIR}/firmware/boards")
 
 include(pico_sdk_import.cmake)
 # firmware version
-set(FW_VERSION "5.0.1a")
+set(FW_VERSION "5.0.2a")
 message(STATUS "Building firmware version ${FW_VERSION}")
-project(A2DVI-V5-v5.0.1a C CXX ASM)
+project(A2DVI-V5-v5.0.2a C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
@@ -49,9 +49,9 @@ add_compile_options(-DDVI_N_TMDS_BUFFERS=8)
 add_compile_options(-DFW_VERSION="${FW_VERSION}")
 
 # Enable the debug counters FEATURE_DEBUG_COUNTER
-add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
+#add_compile_options(-DFEATURE_DEBUG_COUNTER=1)
 
-# Add executable. Default name is the project name, version 0.1
+# Add executable. Default name is the project name
 
 add_executable(${PROJECT_NAME} 
     firmware/main.c
@@ -125,7 +125,7 @@ add_executable(${PROJECT_NAME}
  )
 
 pico_set_program_name(${PROJECT_NAME} "A2DVI")
-pico_set_program_version(${PROJECT_NAME} "5.0a")
+pico_set_program_version(${PROJECT_NAME} "5.0.2a")
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
@@ -151,7 +151,7 @@ target_link_libraries(${PROJECT_NAME}
     pico_stdlib
 
     # comment in tinyusb for usb reboot, don't use in production
-    tinyusb_device     
+#    tinyusb_device     
 )
 
 # Add the standard include files to the build
