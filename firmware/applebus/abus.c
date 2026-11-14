@@ -633,6 +633,19 @@ void __time_critical_func(bus_func_cxxx_write)(uint32_t value)
     }
 }
 
+static void reset_abus(void)
+{
+    soft_switches = SOFTSW_TEXT_MODE | SOFTSW_V7_MODE3;
+    romx_unlocked = 0;
+    dev_config_lock = 0;
+#ifndef FEATURE_ABUS_DEBUG
+    bus_overflow_counter = 0;
+#endif
+    videx_vterm_mem_selected = false;
+    ramworks_active = false;
+    reset_counter++;
+}
+
 void __time_critical_func(bus_func_fxxx_read)(uint32_t value)
 {
     uint_fast16_t address = ADDRESS_BUS(value);
@@ -642,15 +655,7 @@ void __time_critical_func(bus_func_fxxx_read)(uint32_t value)
         (address == APPLEII_ORIGINAL_ROM_RESET)) // Apple II reset routine
        )
     {
-        soft_switches = SOFTSW_TEXT_MODE | SOFTSW_V7_MODE3;
-        romx_unlocked = 0;
-        dev_config_lock = 0;
-#ifndef FEATURE_ABUS_DEBUG
-        bus_overflow_counter = 0;
-#endif
-        videx_vterm_mem_selected = false;
-        ramworks_active = false;
-        reset_counter++;
+        reset_abus();
     }
     if (address == APPLEII_ROM_HOME+1) // HOME, executed after the BELL, about 100ms after RESET    //  ??? Need ssomething for IIgs
     {
@@ -751,6 +756,34 @@ void __time_critical_func(abus_clear_fifo)(void)
     }
 }
 
+
+static absolute_time_t s_deassert_time = 0;
+
+static void __time_critical_func(a2_reset_irq_handler)(uint gpio, uint32_t events)
+{
+    if (gpio == CONFIG_PIN_RESET)
+    {
+        if (events & GPIO_IRQ_EDGE_RISE)   // do not come out of reset on spikes
+        {
+            absolute_time_t current_time = get_absolute_time();
+
+            if ((to_us_since_boot(current_time) - to_us_since_boot(s_deassert_time)) > (100 * 1000))     //  100 miliseconds
+            {
+                //  ??? drain TX FIFO?
+                reset_abus();
+            }
+            
+            //  Record the time
+            s_deassert_time = current_time;
+        }
+
+        if (events & GPIO_IRQ_EDGE_FALL) 
+        {
+            //  assert a reset.  This line can be noisy, so we don't do anything till it comes high
+        }
+    }
+}
+
 void __time_critical_func(abus_init)()
 {
 #ifdef APPLE_MODEL_IIPLUS
@@ -761,6 +794,16 @@ void __time_critical_func(abus_init)()
     //  Release RESET
     gpio_set_dir(CONFIG_PIN_RESET, GPIO_IN);
     gpio_put(CONFIG_PIN_RESET, 0);
+
+    s_deassert_time = nil_time;
+
+    //  Process interrupts on core 0
+    gpio_set_irq_enabled_with_callback(CONFIG_PIN_RESET, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true, a2_reset_irq_handler);
+    
+    if (gpio_get(CONFIG_PIN_RESET))       //  If already out of resest, run the routine to intialize
+    {
+       a2_reset_irq_handler(CONFIG_PIN_RESET, GPIO_IRQ_EDGE_RISE);
+    }                                                 
 }
 
 void __time_critical_func(abus_loop)()
