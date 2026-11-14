@@ -268,6 +268,28 @@ static void update_led()
     }
 }
 
+static uint32_t s_last_bus_cycle_counter = 0;
+
+static void is_power_on()
+{
+    if (s_last_bus_cycle_counter == bus_cycle_counter)
+    {
+        //  power is off, display the splash screen
+        bus_cycle_counter = 0;
+        s_last_bus_cycle_counter = 0;
+
+        //  Reset the softswitches and display the splash screen
+        soft_switches  = SOFTSW_TEXT_MODE  | SOFTSW_V7_MODE3 | SOFTSW_SHOW_SPLASH;
+
+        render_splash();
+    }
+    else
+    {
+        //  Just keep counting...
+        s_last_bus_cycle_counter = bus_cycle_counter;
+    }
+}
+
 
 void DELAYED_COPY_CODE(render_loop)()
 {
@@ -400,5 +422,8 @@ void DELAYED_COPY_CODE(render_loop)()
             cfg_video_mode &= 1;
             a2dvi_dvi_enable(cfg_video_mode & 1);
         }
+
+        //  Check to see if we have bus activity
+        is_power_on();
     }
 }
