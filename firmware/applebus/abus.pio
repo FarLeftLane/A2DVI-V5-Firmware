@@ -55,7 +55,7 @@
 .pio_version 1                          // We need version 1 (not 0) for RP2350
 
 .define public  GPIO_RW             37  // Read / Write pin
-.define public  M2B0_PIN            36  // M2B0 pin ???  Currently PB_EX1
+.define public  M2B0_PIN            36  // M2B0 pin
 
 .define public  GPIO_IN_ADDR_BASE   20  // base of the A0-A15 range
 .define public  IN_ADDR_SIZE        18  // incl. addr, M2B0 and RW, but not selects or data
@@ -100,7 +100,7 @@
     in pins, IN_ADDR_SIZE               // Read the R/W, M2B0 and A0-A15 (18 bits)
     in NULL, IN_DATA_SIZE      [31]     // Pad the rest for data (11 bits)
 
-    nop                        [29]     // delay (30) till 75 cycles, ??? will this work in 640x480 mode?
+    nop                        [29]     // delay (30) till 75 cycles, works in 640x480 mode and 720x480
 
     irq prev IRQ_WRITE                  // set 'write' IRQ.  IRQ_WRITE is being waited on in PIO2 SM0 (program abus_write), so we signal prev (PIO0->PIO2)
 
@@ -121,7 +121,6 @@ static inline void abus_addr_program_set_config(PIO pio, uint sm, pio_sm_config 
     {
         pio_gpio_init(pio, gpio);
         gpio_disable_pulls(gpio);
-//        gpio_set_input_hysteresis_enabled(gpio, true);                 //  ??? Need to investigate if this is needed
     }
 
     // Set to input
@@ -177,7 +176,6 @@ static inline void abus_iigs_addr_program_set_config(PIO pio, uint sm, pio_sm_co
     {
         pio_gpio_init(pio, gpio);
         gpio_disable_pulls(gpio);
-//        gpio_set_input_hysteresis_enabled(gpio, true);                 //  ??? Need to investigate if this is needed
     }
 
     // Set to input
@@ -221,7 +219,6 @@ static inline void abus_write_program_set_config(PIO pio, uint sm, pio_sm_config
     {
         pio_gpio_init(pio, gpio);
         gpio_disable_pulls(gpio);
-//        gpio_set_input_hysteresis_enabled(gpio, true);                 //  ??? Need to investigate if this is needed
     }
 
     // Set to input

@@ -269,24 +269,31 @@ static void update_led()
 }
 
 static uint32_t s_last_bus_cycle_counter = 0;
+static uint32_t s_power_off_count = 0;
 
 static void is_power_on()
 {
     if (s_last_bus_cycle_counter == bus_cycle_counter)
     {
-        //  power is off, display the splash screen
-        bus_cycle_counter = 0;
-        s_last_bus_cycle_counter = 0;
+        s_power_off_count++;
 
-        //  Reset the softswitches and display the splash screen
-        soft_switches  = SOFTSW_TEXT_MODE  | SOFTSW_V7_MODE3 | SOFTSW_SHOW_SPLASH;
+        if (s_power_off_count == 60)        //  One second
+        {
+            //  power is off, display the splash screen
+            bus_cycle_counter = 0;
+            s_last_bus_cycle_counter = 0;
 
-        render_splash();
+            //  Reset the softswitches and display the splash screen
+            soft_switches  = SOFTSW_TEXT_MODE  | SOFTSW_V7_MODE3 | SOFTSW_SHOW_SPLASH;
+
+            render_splash();
+        }
     }
     else
     {
         //  Just keep counting...
         s_last_bus_cycle_counter = bus_cycle_counter;
+        s_power_off_count = 0;
     }
 }
 

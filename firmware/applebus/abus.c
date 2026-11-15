@@ -107,7 +107,7 @@ static inline void __time_critical_func(machine_auto_detection)(uint32_t address
                 detected_machine = MACHINE_IIGS;
                 set_machine(MACHINE_IIGS);
 
-                soft_switches &= ~ SOFTSW_SHOW_SPLASH;      //  bus_func_fxxx_read doesn't trigger on the IIgs
+                soft_switches &= ~ SOFTSW_SHOW_SPLASH;      //  bus_func_fxxx_read doesn't trigger on the IIgs ???
             }
         }
         else
@@ -352,9 +352,9 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
         {
             //  NEWVIDEO Register
             //  b7 - 1=SHR
-            //  b6 - 0=IIe 128K map, 1=linear address space ???
+            //  b6 - 0=IIe 128K map, 1=linear address space
             //  b5 - DHR Mono 0=Color, 1=B&W
-            //  b0 - Bank Latch? ???
+            //  b0 - Bank Latch
             uint_fast8_t data = DATA_BUS(value);
 
             soft_switches = (soft_switches & ~(SOFTSW_NEWVID_MASK << SOFTSW_NEWVID_SHIFT)) | (((data) & SOFTSW_NEWVID_MASK) << SOFTSW_NEWVID_SHIFT);
@@ -381,7 +381,7 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
         if (IS_IFLAG(IFLAGS_IIGS_REGS) && (is_write))
         {
             /*  
-            Shadow Register (Is this register needed???)
+            Shadow Register (This register is not currently used)
             • Bit 0: Inhibit / control Text page 1 shadowing ($0400–$07FF)
             • Bit 1: Inhibit / control Hi-Res page 1 shadowing ($2000–$3FFF)
             • Bit 2: Inhibit / control Hi-Res page 2 shadowing ($4000–$5FFF)
@@ -393,7 +393,7 @@ static inline void __time_critical_func(apple2_softswitches)(bool is_write, uint
             */
             uint_fast8_t data = DATA_BUS(value);
 
-            s_soft_switches_2 = (s_soft_switches_2 & ~(SOFTSW2_SHADOW_MASK << SOFTSW2_SHADOW_SHIFT)) | ((data & SOFTSW2_SHADOW_MASK) << SOFTSW2_SHADOW_SHIFT);         //  ???  Not used?
+            s_soft_switches_2 = (s_soft_switches_2 & ~(SOFTSW2_SHADOW_MASK << SOFTSW2_SHADOW_SHIFT)) | ((data & SOFTSW2_SHADOW_MASK) << SOFTSW2_SHADOW_SHIFT);
         }
         break;
 
@@ -657,10 +657,12 @@ void __time_critical_func(bus_func_fxxx_read)(uint32_t value)
     {
         reset_abus();
     }
-    if (address == APPLEII_ROM_HOME+1) // HOME, executed after the BELL, about 100ms after RESET    //  ??? Need ssomething for IIgs
+    if (address == APPLEII_ROM_HOME+1) // HOME, executed after the BELL, about 100ms after RESET
     {
         if (((uint16_t) last_read_address) == APPLEII_ROM_HOME)
-            soft_switches &= ~ SOFTSW_SHOW_SPLASH;
+        {
+            soft_switches &= ~ SOFTSW_SHOW_SPLASH;          //  Hide the splash screen
+        }
     }
     else
     {
@@ -769,10 +771,10 @@ static void __time_critical_func(a2_reset_irq_handler)(uint gpio, uint32_t event
 
             if ((to_us_since_boot(current_time) - to_us_since_boot(s_deassert_time)) > (100 * 1000))     //  100 miliseconds
             {
-                //  ??? drain TX FIFO?
+                //  Reset the abus and softswitch state
                 reset_abus();
             }
-            
+
             //  Record the time
             s_deassert_time = current_time;
         }

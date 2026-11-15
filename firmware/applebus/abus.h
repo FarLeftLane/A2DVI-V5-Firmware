@@ -27,8 +27,6 @@ SOFTWARE.
 
 #include "abus_pin_config.h"
 
-//  ??? Can we inlcude the pio public defines for this?
-
 void abus_init      (void);
 void abus_loop      (void);
 void abus_clear_fifo(void);

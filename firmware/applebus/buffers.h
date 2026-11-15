@@ -50,7 +50,7 @@ extern          uint32_t dbg_counter2;
 
 extern volatile uint8_t  cardslot;
 
-#define MAX_ADDRESS (0x0000A000)            //  ??? IIgs needs 0000-A000
+#define MAX_ADDRESS (0x0000A000)            //  IIgs needs 0000-A000
 
 extern uint8_t apple_memory[MAX_ADDRESS];
 extern uint8_t aux_memory[MAX_ADDRESS];

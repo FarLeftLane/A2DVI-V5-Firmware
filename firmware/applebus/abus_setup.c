@@ -46,11 +46,6 @@ static bool s_abus_setup = false;
 static bool s_abus_gs_mode = false;
 
 
-void a2dvi_check_hardware(void)
-{
-    //  ??? Is there anything we can check?
-}
-
 void abus_pio_setup(void)
 {
     //  The addr PIO is offset to a base of 16
@@ -95,13 +90,6 @@ void abus_pio_setup(void)
     pio_sm_set_enabled(CONFIG_ABUS_ADDR_PIO, ABUS_ADDR_SM, true);
 
     s_abus_setup = true;
-
-#if 0
-    //  ??? Is this needed?
-    // Disable input synchronization on input pins that are sampled at known stable times
-    // to shave off two clock cycles of input latency
-    pio->input_sync_bypass |= (0x3ff << CONFIG_PIN_APPLEBUS_DATA_BASE);
-#endif
 }
 
 void abus_enable_gs(void)

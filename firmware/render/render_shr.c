@@ -360,7 +360,6 @@ void DELAYED_COPY_CODE(encode_shr_640_palette)(const uint8_t *in_palette)
 
     for (int i = 0; i < 16; i++)
     {
-        //  Can all of this be done as a lookup table ???
         for (int pixel12 = 0; pixel12 < 16; pixel12++)
         {
             int pixel1 = pixel12 >> 2;
@@ -533,7 +532,7 @@ void DELAYED_COPY_CODE(render_shr_mem)(uint8_t* in_line_mem, uint32_t in_start_l
         const uint8_t *line_mem = (const uint8_t *)(&(in_line_mem[(line * 160)]));
         uint8_t scanline_control = in_line_mem[(0x9D00 - 0x2000) + line];
 
-        //  High bit set is 640, bit 5 is color fill mode ???
+        //  High bit set is 640, bit 5 is color fill mode
         if ((scanline_control & 0x80) != 0)
         {
             render_shr_640_line_mem(line_mem, (scanline_control & 0x0F));

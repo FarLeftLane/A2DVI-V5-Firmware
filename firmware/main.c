@@ -98,14 +98,6 @@ int main()
     // enable LED etc
     debug_init();
 
-    //  Enable to reboot without BOOTSEL button
-    // stdio_init_all();                               //  ??? Turn off for abus or UART?
-
-#if 0                           //  ??? Disabled
-    // check hardware
-    a2dvi_check_hardware();
-#endif
-
     //  Read the button state and reset settings if pressed
     bool button_pressed = !gpio_get(CONFIG_PIN_LANGUAGE_SW);
 

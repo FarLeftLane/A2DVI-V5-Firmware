@@ -24,13 +24,11 @@ SOFTWARE.
 
 #pragma once
 
-//  ??? Can we inlcude the pio public defines for this?
-
 // pin configuration
-#define CONFIG_PIN_APPLEBUS_DATA_BASE    (0)        //  8+3 pins
+#define CONFIG_PIN_APPLEBUS_DATA_BASE    (0)        //  Base of zero, 8+3 pins
 #define CONFIG_PIN_APPLEBUS_SELECT       (8)        //  DEVSEL
 #define CONFIG_PIN_APPLEBUS_RW           (28)       //  This is the position in the FIFO value, not the GPIO
-#define CONFIG_PIN_LANGUAGE_SW           (42)       //  BUTTON
+#define CONFIG_PIN_LANGUAGE_SW           (42)       //  BUTTON GPIO
 #define CONFIG_PIN_APPLEBUS_M2B0         (27)       //  This is the position in the FIFO value, not the GPIO
 
 #define CONFIG_PIN_RESET                 (11)       //  RESET
