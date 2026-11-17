@@ -28,7 +28,7 @@ SOFTWARE.
 #include "config/config.h"
 #include "render.h"
 
-#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 uint8_t DELAYED_COPY_DATA(dgr_dot_pattern)[32] = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,

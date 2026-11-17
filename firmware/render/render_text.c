@@ -33,7 +33,7 @@ SOFTWARE.
 
 #include "render.h"
 
-#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 volatile uint_fast32_t text_flasher_mask = 0;
 static uint64_t next_flash_tick = 0;

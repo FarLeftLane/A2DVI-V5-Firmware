@@ -37,7 +37,7 @@ uint8_t DELAYED_COPY_DATA(tmds_dhgr_lores_mapping)[16] =
     9*3 /*9:HVIOLET*/, 11*3 /*11:LBLUE*/, 13*3 /*13:PINK*/,    15*3 /*15:WHITE*/
 };
 
-#define PAGE2SEL ((s_render_soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
+#define PAGE2SEL ((soft_switches & (SOFTSW_80STORE | SOFTSW_PAGE_2)) == SOFTSW_PAGE_2)
 
 // add pixels to TMDS line
 #define ADD_TMDS_LORES_PIXELS(tmds_red, tmds_green, tmds_blue, color_index, count) \
