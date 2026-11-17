@@ -534,13 +534,15 @@ void __time_critical_func(bus_func_screen_write)(uint32_t value)
     {
         uint_fast8_t data = DATA_BUS(value);
 
-        if (ACCESS_M2B0(value))
+#if 1
+        if ( (ACCESS_M2B0(value)) && (IS_IFLAG(IFLAGS_IIGS_REGS)) )
         {
             //  AUX
             aux_memory[address] = data;
         }
         else
         {
+#endif
             // Mirror Video Memory from MAIN & AUX banks
             if ( (soft_switches & SOFTSW_80STORE) && ((/*(address >= 0x400) && */(address < 0x800)) ||
                 ((soft_switches & SOFTSW_HIRES_MODE) && (address >= 0x2000) && (address < 0x4000) ) ) )
@@ -571,7 +573,9 @@ void __time_critical_func(bus_func_screen_write)(uint32_t value)
                     }
                 }
             }
+#if 1
         }
+#endif
     }
 }
 
