@@ -11,6 +11,9 @@ The major differences between the V2 versions and V5 versions are:
 
 This release (Nov 17, 2026 / 2026.11.17) is feature compete for video features, but has had limited testing. (alpha)
 
+# Cards can be purchased from:
+Ralle's site at: https://apple2.co.uk/Products
+
 Possible future updates:
 * C030 sound support over the hdmi link
 * ThunderClock RTC support via a RTC module.
