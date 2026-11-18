@@ -1,3 +1,81 @@
+# A2DVI V5 Firmware: Digital Video for Apple II Computers
+
+This is the firmware project for the V5 version of the A2DVI digital DVI/HDMI video card for Apple II.
+It directly produces a digital video stream from the Apple II's memory content.
+The signal is output via an HDMI connector, connecting the Apple II to modern displays with HDMI (or DVI) inputs.
+
+The major differences between the V2 versions and V5 versions are:
+* Built on the [Ralle's Clintech Pico Board](https://clintech.net/CPB/) powered by the RP2350 (vs. RP2040)
+* Support for the Apple IIgs (along with II/II+/IIe and clones).  
+ ** 320x240, 640x480 modes are supported with border and text/background colors.
+
+This release (Nov 17, 2026 / 2026.11.17) is feature compete for video features, but has had limited testing. (alpha)
+
+Possible future updates:
+* C030 sound support over the hdmi link
+* ThunderClock RTC support via a RTC module.
+
+Known limitations:
+* A2DVI doesn't do cycle accurate video, so some "follow the beam" games and demos might not work well.
+
+Apple IIgs limitations:
+To support IIgs video modes, the card must have access to the M2B0 signal (slot pin 35).  This signal is not connected on all version of the IIgs to all slots:
+* ROM 00 / ROM 01: Present only on Slot 3 (pin 35); left unused on other slots.
+* ROM 03: Present on Slots 1–6 (pin 35).
+* Slot 7: Does not provide M2B0.
+
+So for ROM OO / ROM 01 motherboards, the A2DVI card needs to be in slot 3.  For ROM 03 machines, the A2DVI needs to be in slots 1 through 6.
+
+The A2DVI hardware designs can be found on Ralle Palaveev's GitHub repo:
+* [A2DVI Hardware](https://github.com/rallepalaveev/A2DVI)
+
+This folk is based on Thorsten Brehm's A2DVI firmware. His related firmware project is here: https://github.com/ThorstenBr/A2DVI-Firmware
+
+# Configuration
+You can use the A2DVI v2 Config Utilities with A2DVI V5 firmware.
+
+The firmware supports various configuration properties.
+There are configuration utility disks for [ProDOS](https://github.com/ThorstenBr/A2DVI-Firmware/raw/master/configutil/A2DVICONFIG_PRODOS.po) and [DOS3.3](https://github.com/ThorstenBr/A2DVI-Firmware/raw/master/configutil/A2DVICONFIG_DOS33.dsk).
+
+You can also manually type and save the configuration program. It takes just 15 lines of BASIC. See [here](configutil/README.md) for more.
+
+![Config Utility](images/A2DVI_Config.jpg)
+
+![Config Utility Page 2](images/A2DVI_Config2.jpg)
+
+# V5 Hardware
+
+![A2DVI PCB v2.0](images/A2DVI.v5.1.jpeg)
+
+# Firmware Updates
+Firmware updates of an A2DVI V5 card are easy and safe:
+
+1. Switch off your Apple II. (*It's otherwise safe to update the A2DVI card while it is still plugged in the Apple II.*)
+2. Press the black "BOOTSEL" button on top of the A2DVI's PICO module. *Keep the button depressed.*
+3. While the button is still depressed, connect the USB cable between your PC/Mac and the PICO module.
+4. Your PC/Mac should recognize a new mass storage device.
+5. Drag & drop the firmware file from the Release's ZIP-file (e.g. "A2DVI-V5-XXXXX.uf2", see [Releases](https://github.com/FarLeftLane/A2DVI-V5-Firmware/releases)) to the mass storage drive.
+6. After 2 seconds the should unmount. The firmware update is complete.
+7. Disconnect the USB cable. Switch on the Apple II... :)
+
+# Button (BTN / H3)
+There are two pins above the PICO module that can be connected to an optional button.  This button can be used to cycle through video modes when you are using the machine.  Holding the button down when turning the machine on will revert to default settings.
+
+# Caution
+The DVI and USB-C connectors for the card should face towards the Apple II keyboard.  Follow the arrow by the keyboard graphic on the board and the "This edge towards case back" to orient the card correctly.  Inserting the card the other direction may damage the card and/or the computer.   
+
+# Details
+Any A2DVI V5 addions by Michael Neil/Far Left Lane are provided under MIT license.  I do not use AI generate code in this project.
+
+---
+---
+---
+---
+
+# Below is Thorsten's A2DVI Firmware Read Me for more background and history
+
+# Some of this material might not apply to V5 cards
+
 # A2DVI Firmware: Digital Video for Apple II Computers
 
 This is a firmware project for a digital DVI/HDMI video card for Apple II.
