@@ -17,6 +17,7 @@ Ralle's site at: https://apple2.co.uk/Products
 Possible future updates:
 * C030 sound support over the hdmi link
 * ThunderClock RTC support via a RTC module.
+* 3200 "mode" and other beam chasing.
 
 Known limitations:
 * A2DVI doesn't do cycle accurate video, so some "follow the beam" games and demos might not work well.
